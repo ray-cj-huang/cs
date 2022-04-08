@@ -18,6 +18,8 @@ int main(int argc, char* argv[])
 {
   try
   {
+    //TODO(rayhuang28): Use NginxConfigParser to parse a config file, then open a connection
+    //  to the port in the config.
     if (argc != 2)
     {
       std::cerr << "Usage: server <port>\n";

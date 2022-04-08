@@ -23,8 +23,13 @@ void session::handle_read(const boost::system::error_code& error,
 {
   if (!error)
   {
-    boost::asio::async_write(socket_,
-        boost::asio::buffer(data_, bytes_transferred),
+    //TODO(!): Add verification that HTTP request is properly formatted.
+    res_.result(http::status::ok);
+    res_.set(http::field::content_type, "text/plain");
+    res_.body().data = data_;
+    res_.body().size = bytes_transferred;
+    http::async_write(socket_,
+        res_,
         boost::bind(&session::handle_write, this,
           boost::asio::placeholders::error));
   }
