@@ -40,10 +40,12 @@ include_directories(include)
 # Update name and srcs
 add_library(server_lib src/server.cc)
 add_library(session_lib src/session.cc)
+add_library(config_parser_lib src/config_parser.cc)
+
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
-target_link_libraries(server server_lib session_lib Boost::system Boost::thread) # IMPORTANT: add more boost libraries here
+target_link_libraries(server server_lib session_lib config_parser_lib Boost::system Boost::thread) # IMPORTANT: add more boost libraries here
 
 # TODO(!): Update test executable name, srcs, and deps
 # add_executable(example_lib_test tests/example_lib_test.cc)

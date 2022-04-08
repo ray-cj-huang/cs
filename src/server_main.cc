@@ -10,7 +10,9 @@
 
 #include <iostream>
 #include <boost/bind.hpp>
+
 #include "server.h"
+#include "config_parser.h"
 
 using boost::asio::ip::tcp;
 
@@ -18,18 +20,24 @@ int main(int argc, char* argv[])
 {
   try
   {
-    //TODO(rayhuang28): Use NginxConfigParser to parse a config file, then open a connection
-    //  to the port in the config.
-    if (argc != 2)
-    {
-      std::cerr << "Usage: server <port>\n";
-      return 1;
+    // Use NginxConfigParser to parse a config file,
+    // then open a connection to the port in the config.
+    NginxConfigParser parser;
+    NginxConfig config;
+
+    if (!parser.Parse(argv[1], &config)) {
+      return -1;
+    }
+
+    int portNum = config.GetPort();
+    if (portNum == -1) {
+      return -1;
     }
 
     boost::asio::io_service io_service;
 
     using namespace std; // For atoi.
-    server s(io_service, atoi(argv[1]));
+    server s(io_service, static_cast<short>(portNum));
 
     io_service.run();
   }
