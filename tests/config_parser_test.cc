@@ -1,13 +1,16 @@
 #include "gtest/gtest.h"
 #include "config_parser.h"
 
+static const std::string TEST_CONFIG_PATH = "test_configs/";
+
 class ConfigParserTest : public ::testing::Test {
   protected:
     NginxConfigParser parser;
     NginxConfig out_config;
     
     void testParsing(const char* name, bool correct) {
-      bool success = parser.Parse(name, &out_config);
+      std::string filename = TEST_CONFIG_PATH + std::string(name);
+      bool success = parser.Parse(filename.c_str(), &out_config);
       if (correct)
         EXPECT_TRUE(success);
       else
@@ -17,7 +20,7 @@ class ConfigParserTest : public ::testing::Test {
 
 /* Right Test Cases */
 
-TEST_F(ConfigParserTest, ExamplConfig) {
+TEST_F(ConfigParserTest, ExampleConfig) {
   testParsing("example_config", true);
 }
 
