@@ -23,4 +23,10 @@ steps:
     '-t', 'gcr.io/$PROJECT_ID/pushin-p:latest',
     '.'
   ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-f', 'docker/coverage.Dockerfile',
+    '.'
+  ]
 images: ['gcr.io/$PROJECT_ID/pushin-p:base', 'gcr.io/$PROJECT_ID/pushin-p:latest']
