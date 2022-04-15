@@ -21,10 +21,12 @@ void server::handle_accept(session* new_session,
   if (!error)
   {
     new_session->start();
+    flag = HandleAcceptFlag::OK;
   }
   else
   {
     delete new_session;
+    flag = HandleAcceptFlag::ERROR;
   }
 
   start_accept();

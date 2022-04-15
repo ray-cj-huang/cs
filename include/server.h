@@ -8,8 +8,10 @@ using boost::asio::ip::tcp;
 
 class server
 {
+  friend class ServerTest;
 public:
   server(boost::asio::io_service& io_service, short port);
+  enum class HandleAcceptFlag { START, OK, ERROR };
 
 private:
   void start_accept();
@@ -18,6 +20,7 @@ private:
 
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
+  HandleAcceptFlag flag = HandleAcceptFlag::START;
 };
 
 #endif

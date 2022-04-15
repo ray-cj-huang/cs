@@ -48,7 +48,7 @@ target_link_libraries(server server_lib session_lib config_parser_lib Boost::sys
 
 # Update test executable name, srcs, and deps
 add_executable(server_test tests/server_test.cc)
-target_link_libraries(server_test server_lib gtest_main)
+target_link_libraries(server_test server_lib session_lib gtest_main)
 
 add_executable(session_test tests/session_test.cc)
 target_link_libraries(session_test session_lib gtest_main)
