@@ -42,18 +42,25 @@ add_library(server_lib src/server.cc)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 
-
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
 target_link_libraries(server server_lib session_lib config_parser_lib Boost::system Boost::thread)
 
 # Update test executable name, srcs, and deps
+add_executable(server_test tests/server_test.cc)
+target_link_libraries(server_test server_lib gtest_main)
+
+add_executable(session_test tests/session_test.cc)
+target_link_libraries(session_test session_lib gtest_main)
+
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main)
 
 # Update with test binary
+gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(session_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
-generate_coverage_report(TARGETS server server_lib session_lib config_parser_lib TESTS config_parser_test)
+generate_coverage_report(TARGETS server server_lib session_lib config_parser_lib TESTS server_test session_test config_parser_test)

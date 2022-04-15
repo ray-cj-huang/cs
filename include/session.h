@@ -11,6 +11,7 @@ using boost::asio::ip::tcp;
 
 class session
 {
+  friend class SessionTest;
 public:
   session(boost::asio::io_service& io_service);
 
@@ -20,7 +21,7 @@ public:
 
 private:
   void handle_read(const boost::system::error_code& error,
-      size_t bytes_transferred);
+      char* data, size_t bytes_transferred);
 
   void handle_write(const boost::system::error_code& error);
 
