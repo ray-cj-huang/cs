@@ -35,7 +35,7 @@ message(STATUS "Boost version: ${Boost_VERSION}")
 include_directories(include)
 
 # Find Bash
-# find_program (BASH_PROGRAM bash)
+find_program (BASH_PROGRAM bash)
 
 # Update name and srcs
 add_library(server_lib src/server.cc)
@@ -60,6 +60,9 @@ target_link_libraries(config_parser_test config_parser_lib gtest_main)
 gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+
+# Add integration test
+add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test/test.sh)
 
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
