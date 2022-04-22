@@ -1,4 +1,5 @@
 #include "server.h"
+#include "logger.h"
 
 server::server(boost::asio::io_service& io_service, short port)
     : io_service_(io_service),
@@ -18,13 +19,16 @@ void server::start_accept()
 void server::handle_accept(session* new_session,
       const boost::system::error_code& error)
 {
+  Logger* logger = Logger::getLogger();
   if (!error)
   {
+    logger->logInfo("Server - Handle Accept: Success");
     new_session->start();
     flag = HandleAcceptFlag::OK;
   }
   else
   {
+    logger->logError("Server - Handle Accept: Failed");
     delete new_session;
     flag = HandleAcceptFlag::ERROR;
   }

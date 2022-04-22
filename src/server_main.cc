@@ -8,18 +8,21 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include <cstdlib>
+#include <signal.h>
 #include <iostream>
 #include <boost/bind.hpp>
 
 #include "server.h"
 #include "config_parser.h"
+#include "logger.h"
 
 using boost::asio::ip::tcp;
 
-int main(int argc, char* argv[])
-{
-  try
-  {
+int main(int argc, char* argv[]) {
+  try {
+    Logger* logger = Logger::getLogger();
+
     // Use NginxConfigParser to parse a config file,
     // then open a connection to the port in the config.
     NginxConfigParser parser;
@@ -38,6 +41,7 @@ int main(int argc, char* argv[])
 
     using namespace std; // For atoi.
     server s(io_service, static_cast<short>(portNum));
+    logger->logTrace("Server Initalized.");
 
     io_service.run();
   }

@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include "session.h"
+#include "logger.h"
 
 using boost::asio::ip::tcp;
 

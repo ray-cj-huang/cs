@@ -5,6 +5,8 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 
+#include "logger.h"
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 using boost::asio::ip::tcp;
