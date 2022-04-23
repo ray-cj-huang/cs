@@ -1,7 +1,12 @@
 #include <boost/system/error_code.hpp>
+#include <string.h>
+#include <boost/beast/http.hpp>
 
 #include "gtest/gtest.h"
 #include "session.h"
+
+namespace beast = boost::beast;
+namespace http = beast::http;
 
 class SessionTest : public ::testing::Test {
   protected:
@@ -23,7 +28,28 @@ class SessionTest : public ::testing::Test {
       session* new_session = new session(io_service_);
       new_session->handle_write(error);
     }
+
+    session::ParseRequestType testParseRequest(char* data)
+    {
+        std::string s_path = "/static";
+        std::string e_path = "/echo";
+        return session_.parse_request(data, s_path, e_path);
+    }
 };
+
+TEST_F(SessionTest, RequestParserTest) {
+    http::request_parser<http::string_body> req_parser;
+    std::string s = "GET /echo HTTP/1.1\r\n\r\n";
+    boost::beast::error_code ec;
+    size_t n_bytes = req_parser.put(boost::asio::buffer(s), ec);
+    std::string is_done = req_parser.is_done() ? "true" : "false";
+    std::string got_some = req_parser.got_some() ? "true" : "false";
+    std::string is_header_done = req_parser.is_header_done() ? "true" : "false";
+    Logger::logInfo(is_done);
+    Logger::logInfo(got_some);
+    Logger::logInfo(is_header_done);
+    EXPECT_EQ(req_parser.get().method_string().to_string(), std::string("GET"));
+}
 
 TEST_F(SessionTest, SocketExists) {
   session_.socket();
@@ -35,8 +61,14 @@ TEST_F(SessionTest, StartSucceeds) {
   SUCCEED();
 }
 
+TEST_F(SessionTest, ParseRequestSucceeds) {
+    char test_string[] = "GET /static HTTP/1.1\r\n\r\n";
+    EXPECT_EQ(testParseRequest(test_string),
+        session::ParseRequestType::STATICTYPE);
+}
+
 TEST_F(SessionTest, HandleReadSucceeds) {
-  char test_string[] = "foo";
+  char test_string[] = "GET /echo HTTP/1.1\r\n\r\n";
   int test_num = 1025;
   boost::system::error_code no_error = boost::system::error_code();
   ASSERT_FALSE(no_error);

@@ -5,7 +5,7 @@ EXPECTED_RESPONSE_PATH="../tests/integration_test"
 echo "
 foo "bar";
 server {
-  port   8080;
+  port   9080;
   server_name foo.com;
   root /home/ubuntu/sites/foo/;
 }" > example_config_test
@@ -18,13 +18,11 @@ sleep 1
 # Test 1 - Valid Request
 printf "Test 1 - Valid Request\n"
 
-test_response=$(printf '%s\r\n%s\r\n%s\r\n\r\n'  \
-    "GET / HTTP/1.1"                             \
-    "Host: www.example.com"                       \
-    "Connection: close"                     \
-    | nc 127.0.0.1 8080)
-        
-echo $test_response > test_response1
+(printf '%s\r\n%s\r\n%s\r\n\r\n' \
+    "GET /echo HTTP/1.1"                        \
+    "Host: www.example.com"                     \
+    "Connection: close"                         \
+    | nc localhost 9080) > test_response1
 
 DIFF=$(diff ${EXPECTED_RESPONSE_PATH}/test1_expected test_response1)
 
