@@ -14,21 +14,21 @@ void server::start_accept()
   acceptor_.async_accept(new_session->socket(),
       boost::bind(&server::handle_accept, this, new_session,
         boost::asio::placeholders::error));
+  Logger::logInfo("Server - Start Accept");
 }
 
 void server::handle_accept(session* new_session,
       const boost::system::error_code& error)
 {
-  Logger* logger = Logger::getLogger();
   if (!error)
   {
-    logger->logInfo("Server - Handle Accept: Success");
+    Logger::logInfo("Server - Handle Accept: Success");
     new_session->start();
     flag = HandleAcceptFlag::OK;
   }
   else
   {
-    logger->logError("Server - Handle Accept: Failed");
+    Logger::logError("Server - Handle Accept: Failed");
     delete new_session;
     flag = HandleAcceptFlag::ERROR;
   }

@@ -21,8 +21,7 @@ using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[]) {
   try {
-    Logger* logger = Logger::getLogger();
-
+    Logger::init_logging();
     // Use NginxConfigParser to parse a config file,
     // then open a connection to the port in the config.
     NginxConfigParser parser;
@@ -41,7 +40,7 @@ int main(int argc, char* argv[]) {
 
     using namespace std; // For atoi.
     server s(io_service, static_cast<short>(portNum));
-    logger->logTrace("Server Initalized.");
+    Logger::logInfo("Server Initalized.");
 
     io_service.run();
   }
