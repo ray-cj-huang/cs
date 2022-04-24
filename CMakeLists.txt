@@ -42,17 +42,32 @@ add_library(server_lib src/server.cc)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(logger src/logger.cc)
+add_library(request_handler_lib src/request_handler.cc)
+add_library(echo_request_handler_lib src/echo_request_handler.cc)
+add_library(static_request_handler_lib src/static_request_handler.cc)
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
-target_link_libraries(server server_lib session_lib config_parser_lib logger Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
+target_link_libraries(server server_lib session_lib config_parser_lib
+    logger request_handler_lib echo_request_handler_lib
+    static_request_handler_lib Boost::system Boost::thread Boost::regex
+    Boost::log_setup Boost::log)
 
 # Update test executable name, srcs, and deps
 add_executable(server_test tests/server_test.cc)
-target_link_libraries(server_test server_lib session_lib gtest_main logger Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
+target_link_libraries(server_test server_lib session_lib gtest_main logger
+    request_handler_lib echo_request_handler_lib static_request_handler_lib
+    Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(session_test tests/session_test.cc)
-target_link_libraries(session_test session_lib gtest_main logger Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
+target_link_libraries(session_test session_lib gtest_main logger
+    request_handler_lib echo_request_handler_lib static_request_handler_lib
+    Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
+
+add_executable(request_handler_test tests/request_handler_test.cc)
+target_link_libraries(request_handler_test request_handler_lib echo_request_handler_lib
+    static_request_handler_lib gtest_main logger Boost::system
+    Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main)
@@ -61,10 +76,14 @@ target_link_libraries(config_parser_test config_parser_lib gtest_main)
 gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(request_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Add integration test
 add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test/test.sh)
 
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
-generate_coverage_report(TARGETS server server_lib session_lib config_parser_lib TESTS server_test session_test config_parser_test)
+generate_coverage_report(
+    TARGETS server server_lib session_lib config_parser_lib request_handler_lib
+        echo_request_handler_lib static_request_handler_lib
+    TESTS server_test session_test config_parser_test request_handler_test)
