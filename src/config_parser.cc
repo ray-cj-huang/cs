@@ -14,8 +14,11 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "config_parser.h"
+#include "logger.h"
+
 
 // To get the port number from config
 int NginxConfig::GetPort() {
@@ -38,6 +41,31 @@ int NginxConfig::GetPort() {
   return -1;
 }
 
+void NginxConfig::GetPaths(std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> &paths_map,
+                           std::unordered_map<std::string, std::string> &static_paths,
+                           std::unordered_set<std::string> &echo_paths) {
+
+  for (auto singleStatement : statements_) {
+    if (singleStatement->tokens_[0] == "endpoint" && singleStatement->tokens_.size() >= 3) {
+      
+      //TODO(daviddeng8): add logging statements so that they know how to format the endpoints in the config file
+      std::string endpoint = singleStatement->tokens_[1];
+
+      if (singleStatement->tokens_[2] == "STATIC") {
+        std::string directory = singleStatement->tokens_[3];
+        static_paths.insert( {{ endpoint, directory }});
+      }
+      else if (singleStatement->tokens_[2] == "ECHO") {
+        echo_paths.insert(endpoint);
+      }
+
+    }
+
+    if (singleStatement->child_block_.get() != nullptr) {
+      singleStatement->child_block_->GetPaths(paths_map, static_paths, echo_paths);
+    }
+  }
+}
 
 std::string NginxConfig::ToString(int depth) {
   std::string serialized_config;

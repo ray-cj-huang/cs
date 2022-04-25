@@ -29,6 +29,8 @@ void static_request_handler::write_response(
     std::string static_path = target.substr(0, first_slash);
     auto static_folder_pair = static_locations_.find(static_path);
 
+    // TODO(daviddeng8) change the static path locations to be absolute, not relative paths
+
     if (static_folder_pair != static_locations_.end())
     {
         std::string complete_filepath = static_folder_pair->second +

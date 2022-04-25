@@ -7,8 +7,10 @@
 #include <unordered_map>
 #include <string>
 
-session::session(boost::asio::io_service& io_service)
-  : socket_(io_service)
+session::session(boost::asio::io_service& io_service, std::unordered_map<std::string, std::string> &static_paths, std::unordered_set<std::string> &echo_paths)
+  : socket_(io_service),
+    static_paths_(static_paths),
+    echo_paths_(echo_paths)
 {
 }
 
@@ -30,23 +32,17 @@ void session::handle_read(const boost::system::error_code& error,
 {
   if (!error)
   {
-    std::string temp_static = "/static";
-    std::string temp_echo = "/echo";
-    std::unordered_map <std::string, std::string> temp_static_paths;
-    temp_static_paths["/static"] = "../static/";
-
     Logger::logInfo("Logging Data:");
     Logger::logInfo(data);
 
-    session::ParseRequestType req_type = session::parse_request(data,
-        temp_static, temp_echo);
+    session::ParseRequestType req_type = session::parse_request(data);
 
     request_handler* req_handler;
 
     if (req_type == session::ParseRequestType::STATICTYPE)
     {
         Logger::logInfo("Session - Static request recieved.");
-        req_handler = new static_request_handler(temp_static_paths);
+        req_handler = new static_request_handler(static_paths_);
     }
     else if (req_type == session::ParseRequestType::ECHOTYPE)
     {
@@ -87,8 +83,7 @@ void session::handle_read(const boost::system::error_code& error,
   }
 }
 
-session::ParseRequestType session::parse_request(char* data,
-      std::string& static_path, std::string& echo_path)
+session::ParseRequestType session::parse_request(char* data)
 {
     http::request_parser<http::string_body> req_parser;
     boost::beast::error_code ec;
@@ -101,13 +96,14 @@ session::ParseRequestType session::parse_request(char* data,
     if (req_parser.get().method_string().to_string() == session::GET)
     {
         std::string target = req_parser.get().target().to_string();
-        if (target.size() >= static_path.size() &&
-            target.substr(0, static_path.size()) == static_path)
+        
+        int first_slash = target.find("/", 1);
+
+        if (static_paths_.find(target.substr(0, first_slash)) != static_paths_.end())
         {
             return session::ParseRequestType::STATICTYPE;
         }
-        else if (target.size() >= echo_path.size() &&
-            target.substr(0, echo_path.size()) == echo_path)
+        else if (echo_paths_.find(target.substr(0, first_slash)) != echo_paths_.end())
         {
             return session::ParseRequestType::ECHOTYPE;
         }

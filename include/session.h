@@ -1,8 +1,9 @@
 #ifndef session_h
 #define session_h
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
@@ -17,7 +18,9 @@ class session
 {
   friend class SessionTest;
 public:
-  session(boost::asio::io_service& io_service);
+  session(boost::asio::io_service& io_service, 
+          std::unordered_map<std::string, std::string> &static_paths,
+          std::unordered_set<std::string> &echo_paths);
 
   tcp::socket& socket();
 
@@ -30,8 +33,7 @@ private:
   void handle_read(const boost::system::error_code& error,
       char* data, size_t bytes_transferred);
 
-  session::ParseRequestType parse_request(char* data,
-      std::string& static_path, std::string& echo_path);
+  session::ParseRequestType parse_request(char* data);
 
   void handle_write(const boost::system::error_code& error);
 
@@ -42,6 +44,7 @@ private:
   enum { max_length = 1024 };
   char data_[max_length];
   std::unordered_map <std::string, std::string> static_paths_;
+  std::unordered_set <std::string> echo_paths_;
 };
 
 #endif

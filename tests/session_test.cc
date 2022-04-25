@@ -8,32 +8,33 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 
+static std::unordered_map<std::string, std::string> TEST_MAP = std::unordered_map<std::string, std::string>( { { "/static", "../tests/static_files/ "}});
+static std::unordered_set<std::string> TEST_SET = std::unordered_set<std::string>( { "/echo" });
+
 class SessionTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    session session_ = session(io_service_);
+    session session_ = session(io_service_, TEST_MAP, TEST_SET);
 
     // NOTE: consider refactoring handle_write() to use dependency injection for socket
     // exposes handle_read() method and returns http response
     http::response<http::buffer_body> testHandleRead(const boost::system::error_code& error,
           char* data, size_t bytes_transferred) {
         // allocate on heap in case we delete the session (in case of error)
-        session* new_session = new session(io_service_);
+        session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
         new_session->handle_read(error, data, bytes_transferred);
         return new_session->res_;
     }
 
     void testHandleWrite(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)
-      session* new_session = new session(io_service_);
+      session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
       new_session->handle_write(error);
     }
 
     session::ParseRequestType testParseRequest(char* data)
     {
-        std::string s_path = "/static";
-        std::string e_path = "/echo";
-        return session_.parse_request(data, s_path, e_path);
+        return session_.parse_request(data);
     }
 };
 

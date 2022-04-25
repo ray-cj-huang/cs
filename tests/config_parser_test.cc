@@ -3,6 +3,8 @@
 
 static const std::string TEST_CONFIG_PATH = "test_configs/";
 
+// TODO(daviddeng8) unit testing for the paths configs
+
 class ConfigParserTest : public ::testing::Test {
   protected:
     NginxConfigParser parser;
