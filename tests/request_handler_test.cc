@@ -115,4 +115,5 @@ TEST_F(RequestHandlerTest, staticWriteFileNotExist) {
     size_t size = std::strlen(buf);
     testStaticHandler(buf, size);
     EXPECT_EQ(res.result(), http::status::not_found);
+    EXPECT_EQ(res.base()[http::field::content_type], "text/html");
 }

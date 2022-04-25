@@ -35,31 +35,40 @@ void static_request_handler::write_response(
     {
         std::string complete_filepath = static_folder_pair->second +
             target.substr(first_slash, target.size() - first_slash);
-        std::ifstream file;
+        std::ifstream file(complete_filepath);
         int length = 0;
         char* buffer;
-        try
-        {
-            file.open(complete_filepath);
-            file.seekg(0, file.end);
-            length = file.tellg();
-            file.seekg(0, file.beg);
-            buffer = new char[length];
-            file.read(buffer, length);
+        bool default_404 = false;
+
+        if (!file.is_open()) {
+            default_404 = true;
+            file.open("../static/404_error.html");
         }
-        catch (const std::exception& e)
-        {
-            res.result(http::status::not_found);
-            return;
-        }
+
+        file.seekg(0, file.end);
+        length = file.tellg();
+        file.seekg(0, file.beg);
+        buffer = new char[length];
+        file.read(buffer, length);
+        
         file.close();
 
         int period_loc = target.find_last_of(".");
 
-        // no extension defaults to unsupported
-        std::string extension = period_loc == std::string::npos ?
-            "" : target.substr(period_loc, target.size()-period_loc);
+        std::string extension;
+        if (default_404) {
+            extension = static_request_handler::HTML;
+            res.result(http::status::not_found);
 
+        }
+        else {
+            // no extension defaults to unsupported
+            extension = period_loc == std::string::npos ?
+                "" : target.substr(period_loc, target.size()-period_loc);
+
+            res.result(http::status::ok);
+        }
+        
         if (extension == static_request_handler::TXT)
         {
             res.set(http::field::content_type, "text/plain");
@@ -88,7 +97,7 @@ void static_request_handler::write_response(
                 "echo_request_handler - write_response -" \
                 "unsupported extension, defaulting to text/plain");
         }
-        res.result(http::status::ok);
+
         res.body().data = buffer;
         res.body().size = length;
         Logger::logInfo("echo_request_handler - write_response - success");
