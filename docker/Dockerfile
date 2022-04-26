@@ -18,6 +18,7 @@ FROM ubuntu:focal as deploy
 
 COPY --from=builder /usr/src/project/build/bin/server .
 COPY --from=builder /usr/src/project/configs/server_config .
+COPY --from=builder /usr/src/project/static .
 
 EXPOSE 80
 
