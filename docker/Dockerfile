@@ -20,10 +20,13 @@ COPY --from=builder /usr/src/project/build/bin/server .
 COPY --from=builder /usr/src/project/configs/server_config .
 COPY --from=builder /usr/src/project/static ./static
 
+RUN mkdir build
+RUN cd build
+
 EXPOSE 80
 
 # Use ENTRYPOINT to specify the binary name
-ENTRYPOINT ["./server"]
+ENTRYPOINT ["../server"]
 
 # Use CMD to specify arguments to ENTRYPOINT
-CMD ["server_config"]
+CMD ["../server_config"]
