@@ -23,11 +23,9 @@ class NginxConfig {
   std::string ToString(int depth = 0);
   std::vector<std::shared_ptr<NginxConfigStatement>> statements_;
   int GetPort(); // Get Port #
-  std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> paths_map;
-  std::unordered_set<std::string> echo_paths;
-  std::unordered_map<std::string, std::string> static_paths;
-  void GetPaths(std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> &paths_map,
-                std::unordered_map<std::string, std::string> &static_paths,
+  std::unordered_set<std::string> echo_paths_;
+  std::unordered_map<std::string, std::string> static_paths_;
+  void GetPaths(std::unordered_map<std::string, std::string> &static_paths,
                 std::unordered_set<std::string> &echo_paths);
 
 };

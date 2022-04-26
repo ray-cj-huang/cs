@@ -41,8 +41,7 @@ int NginxConfig::GetPort() {
   return -1;
 }
 
-void NginxConfig::GetPaths(std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> &paths_map,
-                           std::unordered_map<std::string, std::string> &static_paths,
+void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_paths,
                            std::unordered_set<std::string> &echo_paths) {
 
   for (auto singleStatement : statements_) {
@@ -51,7 +50,7 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::vector<std::pair
       //TODO(daviddeng8): add logging statements so that they know how to format the endpoints in the config file
       std::string endpoint = singleStatement->tokens_[1];
 
-      if (singleStatement->tokens_[2] == "STATIC") {
+      if (singleStatement->tokens_[2] == "STATIC" && singleStatement->tokens_.size() >= 4) {
         std::string directory = singleStatement->tokens_[3];
         static_paths.insert( {{ endpoint, directory }});
       }
@@ -62,7 +61,7 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::vector<std::pair
     }
 
     if (singleStatement->child_block_.get() != nullptr) {
-      singleStatement->child_block_->GetPaths(paths_map, static_paths, echo_paths);
+      singleStatement->child_block_->GetPaths(static_paths, echo_paths);
     }
   }
 }

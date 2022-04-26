@@ -37,11 +37,11 @@ int main(int argc, char* argv[]) {
     }
 
     // find the endpoints for handling requests
-    config.GetPaths(config.paths_map, config.static_paths, config.echo_paths);
+    config.GetPaths(config.static_paths_, config.echo_paths_);
     boost::asio::io_service io_service;
 
     using namespace std; // For atoi.
-    server s(io_service, static_cast<short>(portNum), config.static_paths, config.echo_paths);
+    server s(io_service, static_cast<short>(portNum), config.static_paths_, config.echo_paths_);
     Logger::logInfo("Server Initalized.");
 
     io_service.run();
