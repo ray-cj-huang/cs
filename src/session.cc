@@ -32,7 +32,10 @@ void session::handle_read(const boost::system::error_code& error,
 {
   if (!error)
   {
-    Logger::logInfo("Logging Data:");
+
+    if (socket_.is_open()) {
+      Logger::logInfo("Logging Data from " + socket_.remote_endpoint().address().to_string());
+    }
     Logger::logInfo(data);
 
     session::ParseRequestType req_type = session::parse_request(data);
