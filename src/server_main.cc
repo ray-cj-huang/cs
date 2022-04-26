@@ -43,13 +43,13 @@ int main(int argc, char* argv[]) {
     using namespace std; // For atoi.
     server s(io_service, static_cast<short>(portNum), config.static_paths_, config.echo_paths_);
     Logger::logInfo("Server Initalized.");
-
+    Logger::logInfo("Port: " + std::to_string(portNum));
     io_service.run();
   }
   catch (std::exception& e)
   {
-    std::cerr << "Exception: " << e.what() << "\n";
+    Logger::logError(strcat("Exception: ", e.what()));
   }
-
+  Logger::logInfo("Server Terminated.");
   return 0;
 }
