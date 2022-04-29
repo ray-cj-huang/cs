@@ -8,6 +8,9 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 
+#include "request_handler.h"
+#include "echo_request_handler.h"
+#include "static_request_handler.h"
 #include "logger.h"
 
 namespace beast = boost::beast;
@@ -19,8 +22,8 @@ class session
   friend class SessionTest;
 public:
   session(boost::asio::io_service& io_service, 
-          std::unordered_map<std::string, std::string> &static_paths,
-          std::unordered_set<std::string> &echo_paths);
+          echo_request_handler* echo_request_handler,
+          static_request_handler* static_request_handler);
 
   tcp::socket& socket();
 
@@ -43,8 +46,8 @@ private:
   http::response<http::buffer_body> res_;
   enum { max_length = 1024 };
   char data_[max_length];
-  std::unordered_map <std::string, std::string> static_paths_;
-  std::unordered_set <std::string> echo_paths_;
+  echo_request_handler* echo_request_handler_;
+  static_request_handler* static_request_handler_;
 };
 
 #endif

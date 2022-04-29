@@ -18,6 +18,8 @@ class static_request_handler: public request_handler
         static_request_handler(
             std::unordered_map <std::string, std::string> &static_locations);
 
+        bool path_exists(std::string path);
+
         void write_response(
             http::response<http::buffer_body> &res);
 

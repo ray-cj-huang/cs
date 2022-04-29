@@ -6,6 +6,17 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 
+echo_request_handler::echo_request_handler(
+    std::unordered_set<std::string> &echo_locations)
+    : echo_locations_(echo_locations)
+{
+}
+
+bool echo_request_handler::path_exists(std::string path) {
+  return echo_locations_.find(path) != echo_locations_.end();
+}
+
+
 void echo_request_handler::write_response(
         http::response<http::buffer_body> &res)
 {

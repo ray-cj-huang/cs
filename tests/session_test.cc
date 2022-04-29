@@ -8,27 +8,33 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 
-static std::unordered_map<std::string, std::string> TEST_MAP = std::unordered_map<std::string, std::string>( { { "/static", "../tests/static_files/ "}});
 static std::unordered_set<std::string> TEST_SET = std::unordered_set<std::string>( { "/echo" });
+static std::unordered_map<std::string, std::string> TEST_MAP = std::unordered_map<std::string, std::string>( { { "/static", "../tests/static_files/ "}});
 
 class SessionTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    session session_ = session(io_service_, TEST_MAP, TEST_SET);
+    session session_ = session(io_service_,
+                               new echo_request_handler(TEST_SET),
+                               new static_request_handler(TEST_MAP));
 
     // NOTE: consider refactoring handle_write() to use dependency injection for socket
     // exposes handle_read() method and returns http response
     http::response<http::buffer_body> testHandleRead(const boost::system::error_code& error,
           char* data, size_t bytes_transferred) {
         // allocate on heap in case we delete the session (in case of error)
-        session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
+        session* new_session = new session(io_service_, 
+                                           new echo_request_handler(TEST_SET),
+                                           new static_request_handler(TEST_MAP));
         new_session->handle_read(error, data, bytes_transferred);
         return new_session->res_;
     }
 
     void testHandleWrite(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)
-      session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
+      session* new_session = new session(io_service_,
+                                         new echo_request_handler(TEST_SET),
+                                         new static_request_handler(TEST_MAP));
       new_session->handle_write(error);
     }
 
