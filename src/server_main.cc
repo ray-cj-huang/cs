@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <signal.h>
 #include <iostream>
+#include <string>
+#include <iterator>
 #include <boost/bind.hpp>
 
 #include "server.h"
@@ -38,17 +40,33 @@ int main(int argc, char* argv[]) {
 
     // find the endpoints for handling requests
     config.GetPaths(config.static_paths_, config.echo_paths_);
+
+    std::string echo_paths = "", static_paths = "";
+    for (const auto& elem: config.echo_paths_)
+    {
+        echo_paths += "\"" + elem + "\", ";
+    }
+    for (const auto& elem: config.static_paths_)
+    {
+        static_paths += "{url: \"" + elem.first +
+                        "\", filepath: \"" + elem.second + "\"}, ";
+    }
+
     boost::asio::io_service io_service;
 
     using namespace std; // For atoi.
     server s(io_service, static_cast<short>(portNum), config.static_paths_, config.echo_paths_);
     Logger::logInfo("Server Initalized.");
     Logger::logInfo("Port: " + std::to_string(portNum));
+    Logger::logInfo("Echo Paths: " + echo_paths);
+    Logger::logInfo("Static Paths: " + static_paths);
     io_service.run();
   }
   catch (std::exception& e)
   {
-    Logger::logError(strcat("Exception: ", e.what()));
+    std::string error_msg = "Exception";
+    error_msg += e.what(); 
+    Logger::logError(error_msg);
   }
   Logger::logInfo("Server Terminated.");
   return 0;

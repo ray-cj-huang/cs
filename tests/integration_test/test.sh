@@ -1,6 +1,7 @@
 #!/bin/bash
 
 EXPECTED_RESPONSE_PATH="../tests/integration_test"
+STATC_FILES_PATH="../static"
 
 echo "
 foo "bar";
@@ -8,6 +9,11 @@ server {
   port   9080;
   server_name foo.com;
   root /home/ubuntu/sites/foo/;
+
+  endpoint /static STATIC ../static/;
+  endpoint /static1 STATIC ../tests/static_files/;
+  endpoint /echo ECHO;
+  endpoint /echo1 ECHO;
 }" > example_config_test
 
 ./bin/server example_config_test &
@@ -15,8 +21,8 @@ pid_server=$!
 
 sleep 1
 
-# Test 1 - Valid Request
-printf "Test 1 - Valid Request\n"
+# Test 1 - Valid Echo Request
+printf "Test 1 - Valid Echo Request\n"
 
 (printf '%s\r\n%s\r\n%s\r\n\r\n' \
     "GET /echo HTTP/1.1"                        \
@@ -49,6 +55,21 @@ if [ "$DIFF" == "" ]; then
     echo "Test 2: Success";  
 else 
     echo "Test 2: Failed"; 
+    kill -9 $pid_server
+    exit 1;
+fi
+
+# Test 3 - Valid Static Request
+printf "Test 3 - Valid Static Request\n"
+
+curl http://localhost:9080/static/lorem-ipsum.txt > test_response3
+
+DIFF=$(diff ${STATC_FILES_PATH}/lorem-ipsum.txt test_response3)
+
+if [ "$DIFF" == "" ]; then
+    echo "Test 3: Success";  
+else 
+    echo "Test 3: Failed"; 
     kill -9 $pid_server
     exit 1;
 fi

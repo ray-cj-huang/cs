@@ -19,6 +19,7 @@ FROM ubuntu:focal as deploy
 COPY --from=builder /usr/src/project/build/bin/server .
 COPY --from=builder /usr/src/project/configs/server_config .
 COPY --from=builder /usr/src/project/static ./static
+COPY --from=builder /usr/src/project/tests/static_files ./tests/static_files
 
 RUN mkdir build
 RUN cd build
