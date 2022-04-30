@@ -70,7 +70,8 @@ target_link_libraries(request_handler_test request_handler_lib echo_request_hand
     Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
-target_link_libraries(config_parser_test config_parser_lib gtest_main)
+target_link_libraries(config_parser_test config_parser_lib gtest_main logger Boost::system
+    Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 # Update with test binary
 gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)

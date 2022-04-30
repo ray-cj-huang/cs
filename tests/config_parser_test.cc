@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 #include "config_parser.h"
+#include "logger.h"
 
 static const std::string TEST_CONFIG_PATH = "test_configs/";
 
-// TODO(daviddeng8) unit testing for the paths configs
 
 class ConfigParserTest : public ::testing::Test {
   protected:
@@ -86,7 +86,6 @@ TEST_F(ConfigParserTest, MalformedMultiContextsConfig) {
 
 TEST_F(ConfigParserTest, EndpointsCorrectConfig) {
 
-  std::cout << "LEBRON" << std::endl;
   testParsing("endpoints_correct_config", true);
   std::unordered_map<std::string, std::string> expected_static( {{ "/static", "../static/" },
                                                                  { "/static1", "../tests/static_files/"}} );
