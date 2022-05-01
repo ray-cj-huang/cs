@@ -30,12 +30,12 @@ class Logger {
 public:
     Logger();
 
-    static void logTrace(std::string err);
-    static void logInfo(std::string err);
-    static void logDebug(std::string err);
-    static void logWarning(std::string err);
-    static void logError(std::string err);
-    static void logFatal(std::string err);
+    static void logTrace(std::string log_string);
+    static void logInfo(std::string log_string);
+    static void logDebug(std::string log_string);
+    static void logWarning(std::string log_string);
+    static void logError(std::string log_string);
+    static void logFatal(std::string log_string);
 
     static void init_logging();
 };

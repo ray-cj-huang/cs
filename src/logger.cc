@@ -30,9 +30,9 @@ void Logger::init_logging() {
     logging::add_common_attributes();
 }
 
-void Logger::logTrace(std::string err)      { BOOST_LOG_TRIVIAL(trace)      << "Trace:  "   << err; }
-void Logger::logInfo(std::string err)       { BOOST_LOG_TRIVIAL(info)       << "Info: "     << err; }
-void Logger::logDebug(std::string err)      { BOOST_LOG_TRIVIAL(debug)      << "Debug: "    << err; }
-void Logger::logWarning(std::string err)    { BOOST_LOG_TRIVIAL(warning)    << "Warning: "  << err; }
-void Logger::logError(std::string err)      { BOOST_LOG_TRIVIAL(error)      << "Error: "    << err; }
-void Logger::logFatal(std::string err)      { BOOST_LOG_TRIVIAL(fatal)      << "Fatal: "    << err; }
+void Logger::logTrace(std::string log_string)       { BOOST_LOG_TRIVIAL(trace)      << "Trace:  "   << log_string; }
+void Logger::logInfo(std::string log_string)        { BOOST_LOG_TRIVIAL(info)       << "Info: "     << log_string; }
+void Logger::logDebug(std::string log_string)       { BOOST_LOG_TRIVIAL(debug)      << "Debug: "    << log_string; }
+void Logger::logWarning(std::string log_string)     { BOOST_LOG_TRIVIAL(warning)    << "Warning: "  << log_string; }
+void Logger::logError(std::string log_string)       { BOOST_LOG_TRIVIAL(error)      << "Error: "    << log_string; }
+void Logger::logFatal(std::string log_string)       { BOOST_LOG_TRIVIAL(fatal)      << "Fatal: "    << log_string; }
