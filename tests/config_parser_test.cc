@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "config_parser.h"
 #include "logger.h"
+#include <fstream>
 
 static const std::string TEST_CONFIG_PATH = "test_configs/";
 
@@ -33,6 +34,19 @@ class ConfigParserTest : public ::testing::Test {
         EXPECT_FALSE(equal_static && equal_echo);
       }
     }
+
+    void testGetPort(int expected_result) {
+      int port = out_config.GetPort();
+      EXPECT_TRUE(port == expected_result);
+    }
+
+    void testToString(std::string expected, int depth) {
+      std::string res = out_config.ToString(depth);
+      std::cout << "Res is: " << std::endl;
+      std::cout << res << std::endl;
+      EXPECT_TRUE(expected == res);
+    }
+
 };
 
 /* Right Test Cases */
@@ -116,4 +130,27 @@ TEST_F(ConfigParserTest, EndpointsStaticFewArgumentsConfig) {
                                                                  { "/static1", "../tests/static_files/"}} );
   std::unordered_set<std::string> expected_echo( { "/echo", "/echo1" } );  
   testGetPaths(expected_static, expected_echo, false);
+}
+
+
+TEST_F(ConfigParserTest, PortCorrectConfig) {
+  testParsing("port_correct_config", true);
+  testGetPort(80);
+}
+
+
+TEST_F(ConfigParserTest, PortInvalidConfig) {
+  testParsing("port_invalid_config", true);
+  testGetPort(-1);
+}
+
+TEST_F(ConfigParserTest, ToStringExampleConfig) {
+  testParsing("example_config", true);
+  std::ifstream t(TEST_CONFIG_PATH + "example_config");
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+
+  std::cout << "the buffer result is: " << std::endl;
+  std::cout << buffer.str() << std::endl;
+  testToString(buffer.str(), 1);
 }

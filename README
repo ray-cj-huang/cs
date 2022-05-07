@@ -23,6 +23,15 @@ To run the tests, run these commands from the build folder:
 make test
 ```
 
+To check the test coverage, run these commands from the build folder:
+
+```
+cmake -DCMAKE_BUILD_TYPE=Coverage ..
+make coverage
+```
+
+The test coverage data should be present in the output of the make command. You can view the detailed information on test coverage inside build/report/index.html.
+
 To run the code (after it's already been built), run these commands from the build folder:
 
 ```

@@ -4,7 +4,7 @@ server {
   location /static StaticHandler {
     root ../static/;
   }
-  location /static1 StaticHandler {}
+  location StaticHandler {}
   location /echo EchoHandler {}
   location /echo1 EchoHandler {}
 
