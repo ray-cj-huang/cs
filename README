@@ -1,0 +1,34 @@
+# pushin-p web server
+
+A simple web server designed for CS 130.
+
+## How the source code is laid out
+
+To be added soon!
+
+## How to build, test, and run the code
+
+To build the code, follow the following commands from the root directory of the project
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+To run the tests, run these commands from the build folder:
+
+```
+make test
+```
+
+To run the code (after it's already been built), run these commands from the build folder:
+
+```
+bin/server ../configs/server_config
+```
+
+## How to add a request handler
+
+To be added soon!
