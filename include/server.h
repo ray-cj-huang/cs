@@ -4,8 +4,8 @@
 #include <boost/asio.hpp>
 #include "session.h"
 #include "logger.h"
-#include "echo_request_handler.h"
-#include "static_request_handler.h"
+#include <unordered_set>
+#include <unordered_map>
 
 using boost::asio::ip::tcp;
 
@@ -13,11 +13,7 @@ class server
 {
   friend class ServerTest;
 public:
-  server(boost::asio::io_service& io_service,
-         short port,
-         echo_request_handler* echo_request_handler,
-         static_request_handler* static_request_handler);
-         
+  server(boost::asio::io_service& io_service, short port, std::unordered_map<std::string, std::string> &static_paths, std::unordered_set<std::string> &echo_paths);
   enum class HandleAcceptFlag { START, OK, ERROR };
 
 private:
@@ -28,8 +24,8 @@ private:
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
   HandleAcceptFlag flag = HandleAcceptFlag::START;
-  echo_request_handler* echo_request_handler_;
-  static_request_handler* static_request_handler_;
+  std::unordered_map<std::string, std::string> static_paths_;
+  std::unordered_set<std::string> echo_paths_;
 };
 
 #endif

@@ -11,12 +11,12 @@ static std::unordered_set<std::string> TEST_SET = std::unordered_set<std::string
 class ServerTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    server server_ = server(io_service_, static_cast<short>(TEST_PORT), new echo_request_handler(TEST_SET), new static_request_handler(TEST_MAP));
+    server server_ = server(io_service_, static_cast<short>(TEST_PORT), TEST_MAP, TEST_SET);
     
     // exposes handle_accept() method and returns HandleAcceptFlag to verify execution
     server::HandleAcceptFlag testHandleAccept(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)
-      session* new_session = new session(io_service_, new echo_request_handler(TEST_SET), new static_request_handler(TEST_MAP));
+      session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
       server_.handle_accept(new_session, error);
       return server_.flag;
     }

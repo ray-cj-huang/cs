@@ -1,15 +1,16 @@
 #include "session.h"
 #include "logger.h"
+#include "request_handler.h"
+#include "echo_request_handler.h"
+#include "static_request_handler.h"
 
 #include <unordered_map>
 #include <string>
 
-session::session(boost::asio::io_service& io_service,
-                 echo_request_handler* echo_request_handler,
-                 static_request_handler* static_request_handler)
+session::session(boost::asio::io_service& io_service, std::unordered_map<std::string, std::string> &static_paths, std::unordered_set<std::string> &echo_paths)
   : socket_(io_service),
-    echo_request_handler_(echo_request_handler),
-    static_request_handler_(static_request_handler)
+    static_paths_(static_paths),
+    echo_paths_(echo_paths)
 {
 }
 
@@ -44,25 +45,25 @@ void session::handle_read(const boost::system::error_code& error,
     if (req_type == session::ParseRequestType::STATICTYPE)
     {
         Logger::logInfo("Session - Static request recieved.");
-        req_handler = static_request_handler_;
+        req_handler = new static_request_handler(static_paths_);
     }
     else if (req_type == session::ParseRequestType::ECHOTYPE)
     {
         
         Logger::logInfo("Session - Echo request recieved.");
-        req_handler = echo_request_handler_;
+        req_handler = new echo_request_handler;
     }
     else if (req_type == session::ParseRequestType::NONGET)
     {
         Logger::logInfo("Session - Non-GET request recieved.");
         // TODO(!) handle non get requests
-        req_handler = echo_request_handler_;
+        req_handler = new echo_request_handler;
     }
     else if (req_type == session::ParseRequestType::BADREQUEST)
     {
         Logger::logInfo("Session - Bad request recieved.");
         // TODO(!) handle bad requests
-        req_handler = echo_request_handler_;
+        req_handler = new echo_request_handler;
     }
     else
     {
@@ -99,13 +100,13 @@ session::ParseRequestType session::parse_request(char* data)
     {
         std::string target = req_parser.get().target().to_string();
         
-        std::string path = target.substr(0, target.find("/", 1));
+        int first_slash = target.find("/", 1);
 
-        if (static_request_handler_->path_exists(path))
+        if (static_paths_.find(target.substr(0, first_slash)) != static_paths_.end())
         {
             return session::ParseRequestType::STATICTYPE;
         }
-        else if (echo_request_handler_->path_exists(path))
+        else if (echo_paths_.find(target.substr(0, first_slash)) != echo_paths_.end())
         {
             return session::ParseRequestType::ECHOTYPE;
         }

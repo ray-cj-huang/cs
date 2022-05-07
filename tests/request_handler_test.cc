@@ -17,8 +17,7 @@ class RequestHandlerTest : public ::testing::Test {
     http::response<http::buffer_body> res;
 
     bool testEchoPut(char* buf, size_t size) {
-        std::unordered_set<std::string> echo_paths({"/echo"});
-        echo_request_handler erh = echo_request_handler(echo_paths);
+        echo_request_handler erh = echo_request_handler();
         erh.put_data(buf, size);
         return erh.req_data_ == buf && erh.req_size_ == size;
     }
@@ -32,8 +31,7 @@ class RequestHandlerTest : public ::testing::Test {
     }
 
     void testEchoHandler(char* buf, size_t size) {
-        std::unordered_set<std::string> echo_paths({"/echo"});
-        echo_request_handler erh = echo_request_handler(echo_paths);
+        echo_request_handler erh = echo_request_handler();
         erh.put_data(buf, size);
         erh.write_response(res);
     }

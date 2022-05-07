@@ -16,10 +16,6 @@ static_request_handler::static_request_handler(
 {
 }
 
-bool static_request_handler::path_exists(std::string path) {
-  return static_locations_.find(path) != static_locations_.end();
-}
-
 void static_request_handler::write_response(
         http::response<http::buffer_body> &res)
 {   
@@ -63,7 +59,7 @@ void static_request_handler::write_response(
         if (default_404) {
             extension = static_request_handler::HTML;
             res.result(http::status::not_found);
-            Logger::logError("static_request_handler - write_response - 404 error file not found.");
+
         }
         else {
             // no extension defaults to unsupported
@@ -76,39 +72,39 @@ void static_request_handler::write_response(
         if (extension == static_request_handler::TXT)
         {
             res.set(http::field::content_type, "text/plain");
-            Logger::logInfo("static_request_handler - write_response - .txt extension");
+            Logger::logInfo("echo_request_handler - write_response - .txt extension");
         }
         else if (extension == static_request_handler::HTML)
         {
             res.set(http::field::content_type, "text/html");
-            Logger::logInfo("static_request_handler - write_response - .html extension");
+            Logger::logInfo("echo_request_handler - write_response - .html extension");
         }
         else if (extension == static_request_handler::JPG ||
                  extension == static_request_handler::JPEG)
         {
             res.set(http::field::content_type, "image/jpeg");
-            Logger::logInfo("static_request_handler - write_response - .jpg extension");
+            Logger::logInfo("echo_request_handler - write_response - .jpg extension");
         }
         else if (extension == static_request_handler::ZIP)
         {
             res.set(http::field::content_type, "application/zip");
-            Logger::logInfo("static_request_handler - write_response - .zip extension");
+            Logger::logInfo("echo_request_handler - write_response - .zip extension");
         }
         else
         {   // unsupported extension -> default to text/plain
             res.set(http::field::content_type, "text/plain");
             Logger::logInfo(
-                "static_request_handler - write_response -" \
+                "echo_request_handler - write_response -" \
                 "unsupported extension, defaulting to text/plain");
         }
 
         res.body().data = buffer;
         res.body().size = length;
-        Logger::logInfo("static_request_handler - write_response - success");
+        Logger::logInfo("echo_request_handler - write_response - success");
     }
     else
     {   // technically should not get here
         res.result(http::status::bad_request);
-        Logger::logError("static_request_handler - write_response - should not have gotten here");
+        Logger::logError("echo_request_handler - write_response - should not have gotten here");
     }
 }

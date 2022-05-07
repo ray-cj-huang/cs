@@ -55,9 +55,7 @@ int main(int argc, char* argv[]) {
     boost::asio::io_service io_service;
 
     using namespace std; // For atoi.
-    server s(io_service, static_cast<short>(portNum),
-             new echo_request_handler(config.echo_paths_),
-             new static_request_handler(config.static_paths_));
+    server s(io_service, static_cast<short>(portNum), config.static_paths_, config.echo_paths_);
     Logger::logInfo("Server Initalized.");
     Logger::logInfo("Port: " + std::to_string(portNum));
     Logger::logInfo("Echo Paths: " + echo_paths);
