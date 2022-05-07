@@ -1,11 +1,11 @@
 server {
   port   80;
-  server_name foo.com;
-  root /home/ubuntu/sites/foo/;
 
-  endpoint /static STATIC ../static/;
-  endpoint /static1 STATIC;
-  endpoint /echo ECHO;
-  endpoint /echo1 ECHO;
+  location /static StaticHandler {
+    root ../static/;
+  }
+  location /static1 StaticHandler {}
+  location /echo EchoHandler {}
+  location /echo1 EchoHandler {}
 
 }

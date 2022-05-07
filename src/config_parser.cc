@@ -20,10 +20,11 @@
 #include "logger.h"
 
 const int ENDPOINT_MIN_SIZE = 3;
-const int STATIC_ENDPOINT_SIZE = 4;
-const std::string ENDPOINT = "endpoint";
-const std::string STATIC_NAME = "STATIC";
-const std::string ECHO_NAME = "ECHO";
+const int STATIC_ENDPOINT_SIZE = 3;
+const std::string ENDPOINT = "location";
+const std::string STATIC_NAME = "StaticHandler";
+const std::string ECHO_NAME = "EchoHandler";
+const std::string ROOT = "root";
 
 // To get the port number from config
 int NginxConfig::GetPort() {
@@ -57,9 +58,15 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
 
       if (endpoint_type == STATIC_NAME) {
         if (singleStatement->tokens_.size() >= STATIC_ENDPOINT_SIZE) {
-          std::string directory = singleStatement->tokens_[3];
-          static_paths.insert( {{ endpoint, directory }});
-          Logger::logInfo("Static path " + endpoint + " successfully parsed.");
+          if (singleStatement->child_block_) {
+            for (auto childStatement : singleStatement->child_block_->statements_) {
+              if (childStatement->tokens_.size() >= 2 && childStatement->tokens_[0] == ROOT) {
+                std::string directory = childStatement->tokens_[1];
+                static_paths.insert( {{ endpoint, directory }});
+                Logger::logInfo("Static path " + endpoint + " successfully parsed.");
+              }
+            }
+          }
         }
         else {
           Logger::logWarning("When specifying a static endpoint in the config file, you need to specify both the endpoint and the path.");

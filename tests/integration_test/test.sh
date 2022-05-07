@@ -10,10 +10,20 @@ server {
   server_name foo.com;
   root /home/ubuntu/sites/foo/;
 
-  endpoint /static STATIC ../static/;
-  endpoint /static1 STATIC ../tests/static_files/;
-  endpoint /echo ECHO;
-  endpoint /echo1 ECHO;
+  location /static StaticHandler {
+    root ../static/;
+  }
+
+  location /static1 StaticHandler {
+    root ../tests/static_files/; # supports relative paths
+  }
+
+  location /echo EchoHandler { # no arguments
+  }
+
+  location /echo1 EchoHandler {
+  }
+
 }" > example_config_test
 
 ./bin/server example_config_test &
