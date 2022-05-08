@@ -17,29 +17,27 @@ class RequestHandlerTest : public ::testing::Test {
     http::response<http::buffer_body> res;
 
     bool testEchoPut(char* buf, size_t size) {
-        echo_request_handler erh = echo_request_handler();
+        echo_request_handler erh = echo_request_handler("/echo", "/echo");
         erh.put_data(buf, size);
         return erh.req_data_ == buf && erh.req_size_ == size;
     }
 
     bool testStaticPut(char* buf, size_t size) {
-        std::unordered_map<std::string, std::string> static_paths(
-            {{"/static", "../tests/static_files/"}});
-        static_request_handler srh = static_request_handler(static_paths);
+        static_request_handler srh = static_request_handler("/static", 
+            "/static/foo", "../tests/static_files");
         srh.put_data(buf, size);
         return srh.req_data_ == buf && srh.req_size_ == size;
     }
 
     void testEchoHandler(char* buf, size_t size) {
-        echo_request_handler erh = echo_request_handler();
+        echo_request_handler erh = echo_request_handler("/echo", "/echo");
         erh.put_data(buf, size);
         erh.write_response(res);
     }
 
     void testStaticHandler(char* buf, size_t size) {
-        std::unordered_map<std::string, std::string> static_paths(
-            {{"/static", "../tests/static_files/"}});
-        static_request_handler srh = static_request_handler(static_paths);
+        static_request_handler srh = static_request_handler("/static", 
+            "/static/foo", "../tests/static_files");
         srh.put_data(buf, size);
         srh.write_response(res);
     }
@@ -102,7 +100,7 @@ TEST_F(RequestHandlerTest, staticWriteZip) {
     EXPECT_EQ(res.base()[http::field::content_type], "application/zip");
 }
 
-TEST_F(RequestHandlerTest, staticWriteUsupported) {
+TEST_F(RequestHandlerTest, staticWriteUnsupported) {
     char buf[] = "GET /static/test.unknown HTTP/1.1\r\n\r\n";
     size_t size = std::strlen(buf);
     testStaticHandler(buf, size);

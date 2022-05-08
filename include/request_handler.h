@@ -13,11 +13,15 @@ class request_handler
 {
     friend class RequestHandlerTest;
     public:
+        request_handler(std::string location, std::string url);
         void put_data(char* req_data, size_t bytes_transferred);
         virtual void write_response(
             http::response<http::buffer_body> &res) = 0;
 
     protected:
+        std::string location_;
+        std::string url_;
+
         char* req_data_;
         size_t req_size_;
 };

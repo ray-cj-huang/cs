@@ -4,37 +4,37 @@
 
 #include "gtest/gtest.h"
 #include "session.h"
+#include "request_handler_factory.h"
+#include "echo_request_handler_factory.h"
+#include "static_request_handler_factory.h"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
 
-static std::unordered_map<std::string, std::string> TEST_MAP = std::unordered_map<std::string, std::string>( { { "/static", "../tests/static_files/ "}});
-static std::unordered_set<std::string> TEST_SET = std::unordered_set<std::string>( { "/echo" });
+std::unordered_map<std::string, request_handler_factory*> TEST_ROUTES = {
+  {"/echo", new echo_request_handler_factory()},
+  {"/static", new static_request_handler_factory("../tests/static_files/")}
+};
 
 class SessionTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    session session_ = session(io_service_, TEST_MAP, TEST_SET);
+    session session_ = session(io_service_, TEST_ROUTES);
 
     // NOTE: consider refactoring handle_write() to use dependency injection for socket
     // exposes handle_read() method and returns http response
     http::response<http::buffer_body> testHandleRead(const boost::system::error_code& error,
           char* data, size_t bytes_transferred) {
         // allocate on heap in case we delete the session (in case of error)
-        session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
+        session* new_session = new session(io_service_, TEST_ROUTES);
         new_session->handle_read(error, data, bytes_transferred);
         return new_session->res_;
     }
 
     void testHandleWrite(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)
-      session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
+      session* new_session = new session(io_service_, TEST_ROUTES);
       new_session->handle_write(error);
-    }
-
-    session::ParseRequestType testParseRequest(char* data)
-    {
-        return session_.parse_request(data);
     }
 };
 
@@ -60,12 +60,6 @@ TEST_F(SessionTest, SocketExists) {
 TEST_F(SessionTest, StartSucceeds) {
   session_.start();
   SUCCEED();
-}
-
-TEST_F(SessionTest, ParseRequestSucceeds) {
-    char test_string[] = "GET /static HTTP/1.1\r\n\r\n";
-    EXPECT_EQ(testParseRequest(test_string),
-        session::ParseRequestType::STATICTYPE);
 }
 
 TEST_F(SessionTest, HandleReadSucceeds) {

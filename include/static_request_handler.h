@@ -16,7 +16,9 @@ class static_request_handler: public request_handler
     friend class RequestHandlerTest;
     public:
         static_request_handler(
-            std::unordered_map <std::string, std::string> &static_locations);
+            std::string location,
+            std::string url,
+            std::string root);
 
         void write_response(
             http::response<http::buffer_body> &res);
@@ -28,7 +30,7 @@ class static_request_handler: public request_handler
         const std::string ZIP = ".zip";
     
     private:
-        std::unordered_map <std::string, std::string> &static_locations_;
+        std::string root_;
 };
 
 #endif

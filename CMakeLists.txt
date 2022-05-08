@@ -45,12 +45,18 @@ add_library(logger src/logger.cc)
 add_library(request_handler_lib src/request_handler.cc)
 add_library(echo_request_handler_lib src/echo_request_handler.cc)
 add_library(static_request_handler_lib src/static_request_handler.cc)
+add_library(echo_request_handler_factory_lib src/echo_request_handler_factory.cc)
+add_library(static_request_handler_factory_lib src/static_request_handler_factory.cc)
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
 target_link_libraries(server server_lib session_lib config_parser_lib
-    logger request_handler_lib echo_request_handler_lib
-    static_request_handler_lib Boost::system Boost::thread Boost::regex
+    logger request_handler_lib 
+    echo_request_handler_factory_lib
+    static_request_handler_factory_lib 
+    echo_request_handler_lib
+    static_request_handler_lib 
+    Boost::system Boost::thread Boost::regex
     Boost::log_setup Boost::log)
 
 # Update test executable name, srcs, and deps
@@ -61,6 +67,7 @@ target_link_libraries(server_test server_lib session_lib gtest_main logger
 
 add_executable(session_test tests/session_test.cc)
 target_link_libraries(session_test session_lib gtest_main logger
+    echo_request_handler_factory_lib static_request_handler_factory_lib 
     request_handler_lib echo_request_handler_lib static_request_handler_lib
     Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
 
@@ -87,4 +94,5 @@ include(cmake/CodeCoverageReportConfig.cmake)
 generate_coverage_report(
     TARGETS server server_lib session_lib config_parser_lib request_handler_lib
         echo_request_handler_lib static_request_handler_lib
+        echo_request_handler_factory_lib static_request_handler_factory_lib
     TESTS server_test session_test config_parser_test request_handler_test)

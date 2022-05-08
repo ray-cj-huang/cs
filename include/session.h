@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 
+#include "request_handler_factory.h"
 #include "logger.h"
 
 namespace beast = boost::beast;
@@ -19,21 +20,17 @@ class session
   friend class SessionTest;
 public:
   session(boost::asio::io_service& io_service, 
-          std::unordered_map<std::string, std::string> &static_paths,
-          std::unordered_set<std::string> &echo_paths);
+          std::unordered_map<std::string, request_handler_factory*> routes);
 
   tcp::socket& socket();
 
   void start();
 
-  enum class ParseRequestType { STATICTYPE, ECHOTYPE,
-                                 NONGET, BADREQUEST };
-
 private:
   void handle_read(const boost::system::error_code& error,
       char* data, size_t bytes_transferred);
 
-  session::ParseRequestType parse_request(char* data);
+  std::string match(std::string target);
 
   void handle_write(const boost::system::error_code& error);
 
@@ -43,8 +40,7 @@ private:
   http::response<http::buffer_body> res_;
   enum { max_length = 1024 };
   char data_[max_length];
-  std::unordered_map <std::string, std::string> static_paths_;
-  std::unordered_set <std::string> echo_paths_;
+  std::unordered_map<std::string, request_handler_factory*> routes_;
 };
 
 #endif

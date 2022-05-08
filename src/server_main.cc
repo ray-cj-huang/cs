@@ -13,10 +13,14 @@
 #include <iostream>
 #include <string>
 #include <iterator>
+#include <unordered_map>
 #include <boost/bind.hpp>
 
 #include "server.h"
 #include "config_parser.h"
+#include "request_handler_factory.h"
+#include "echo_request_handler_factory.h"
+#include "static_request_handler_factory.h"
 #include "logger.h"
 
 using boost::asio::ip::tcp;
@@ -41,21 +45,23 @@ int main(int argc, char* argv[]) {
     // find the endpoints for handling requests
     config.GetPaths(config.static_paths_, config.echo_paths_);
 
+    std::unordered_map<std::string, request_handler_factory*> routes;
     std::string echo_paths = "", static_paths = "";
     for (const auto& elem: config.echo_paths_)
     {
         echo_paths += "\"" + elem + "\", ";
+        routes.insert({{elem, new echo_request_handler_factory()}});
     }
     for (const auto& elem: config.static_paths_)
     {
         static_paths += "{url: \"" + elem.first +
                         "\", filepath: \"" + elem.second + "\"}, ";
+        routes.insert({{elem.first, new static_request_handler_factory(elem.second)}});
     }
 
     boost::asio::io_service io_service;
 
-    using namespace std; // For atoi.
-    server s(io_service, static_cast<short>(portNum), config.static_paths_, config.echo_paths_);
+    server s(io_service, static_cast<short>(portNum), routes);
     Logger::logInfo("Server Initalized.");
     Logger::logInfo("Port: " + std::to_string(portNum));
     Logger::logInfo("Echo Paths: " + echo_paths);

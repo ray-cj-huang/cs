@@ -6,6 +6,12 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 
+echo_request_handler::echo_request_handler(
+    std::string location, std::string url)
+    : request_handler(location, url)
+{
+}
+
 void echo_request_handler::write_response(
         http::response<http::buffer_body> &res)
 {

@@ -5,18 +5,16 @@
 #include "session.h"
 
 static const int TEST_PORT = 80;
-static std::unordered_map<std::string, std::string> TEST_MAP = std::unordered_map<std::string, std::string>();
-static std::unordered_set<std::string> TEST_SET = std::unordered_set<std::string>();
 
 class ServerTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    server server_ = server(io_service_, static_cast<short>(TEST_PORT), TEST_MAP, TEST_SET);
+    server server_ = server(io_service_, static_cast<short>(TEST_PORT), {});
     
     // exposes handle_accept() method and returns HandleAcceptFlag to verify execution
     server::HandleAcceptFlag testHandleAccept(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)
-      session* new_session = new session(io_service_, TEST_MAP, TEST_SET);
+      session* new_session = new session(io_service_, {});
       server_.handle_accept(new_session, error);
       return server_.flag;
     }

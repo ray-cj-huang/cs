@@ -1,16 +1,9 @@
 #include "session.h"
-#include "logger.h"
 #include "request_handler.h"
-#include "echo_request_handler.h"
-#include "static_request_handler.h"
 
-#include <unordered_map>
-#include <string>
-
-session::session(boost::asio::io_service& io_service, std::unordered_map<std::string, std::string> &static_paths, std::unordered_set<std::string> &echo_paths)
+session::session(boost::asio::io_service& io_service, std::unordered_map<std::string, request_handler_factory*> routes)
   : socket_(io_service),
-    static_paths_(static_paths),
-    echo_paths_(echo_paths)
+    routes_(routes)
 {
 }
 
@@ -38,37 +31,37 @@ void session::handle_read(const boost::system::error_code& error,
     }
     Logger::logInfo(data);
 
-    session::ParseRequestType req_type = session::parse_request(data);
-
+    request_handler_factory* factory;
     request_handler* req_handler;
 
-    if (req_type == session::ParseRequestType::STATICTYPE)
-    {
-        Logger::logInfo("Session - Static request recieved.");
-        req_handler = new static_request_handler(static_paths_);
+    http::request_parser<http::string_body> req_parser;
+    boost::beast::error_code ec;
+    std::string string_data(data);
+    size_t n_bytes = req_parser.put(boost::asio::buffer(string_data), ec);
+
+    if (!req_parser.is_done() || ec)
+    { // probably a bad http request and not that it's too big for buffer
+        Logger::logError("Session - bad HTTP request.");
+        return;
     }
-    else if (req_type == session::ParseRequestType::ECHOTYPE)
+    else if (req_parser.get().method_string().to_string() != session::GET)
     {
-        
-        Logger::logInfo("Session - Echo request recieved.");
-        req_handler = new echo_request_handler;
-    }
-    else if (req_type == session::ParseRequestType::NONGET)
-    {
-        Logger::logInfo("Session - Non-GET request recieved.");
-        // TODO(!) handle non get requests
-        req_handler = new echo_request_handler;
-    }
-    else if (req_type == session::ParseRequestType::BADREQUEST)
-    {
-        Logger::logInfo("Session - Bad request recieved.");
-        // TODO(!) handle bad requests
-        req_handler = new echo_request_handler;
+        Logger::logError("Session - method " + req_parser.get().method_string().to_string()
+                         + "is not currently supported");
+        return;
     }
     else
     {
-        Logger::logError(
-           "Session - Handle Read: Failed. Logically should not have gotten here.");
+        std::string target = req_parser.get().target().to_string();
+        std::string handler_path = match(target.substr(0, target.find("/", 1)));
+        if (handler_path == "") {
+            Logger::logError("Session - no matching handler for " + target + " found.");
+            return;
+        }
+
+        factory = routes_[handler_path];
+        req_handler = factory->create(handler_path, target);
+        Logger::logInfo("Session - Used factory to create request handler.");
     }
 
     req_handler->put_data(data, bytes_transferred);
@@ -77,6 +70,7 @@ void session::handle_read(const boost::system::error_code& error,
             res_,
             boost::bind(&session::handle_write, this,
             boost::asio::placeholders::error));
+    Logger::logInfo("Session - Request handler successfully wrote response.");
     delete req_handler;
   }
   else
@@ -86,38 +80,24 @@ void session::handle_read(const boost::system::error_code& error,
   }
 }
 
-session::ParseRequestType session::parse_request(char* data)
+// TODO: Add unit tests for this method
+// Match the target path with the longest matching handler prefix.
+// Returns empty string "" if no matches are found.
+std::string session::match(std::string target)
 {
-    http::request_parser<http::string_body> req_parser;
-    boost::beast::error_code ec;
-    std::string string_data(data);
-    size_t n_bytes = req_parser.put(boost::asio::buffer(string_data), ec);
-    if (!req_parser.is_done() || ec)
-    { // probably a bad http request and not that it's too big for buffer
-        return session::ParseRequestType::BADREQUEST;
-    }
-    if (req_parser.get().method_string().to_string() == session::GET)
+    std::string result = "";
+    int match_len = INT_MAX;
+    for (const auto& route : routes_) 
     {
-        std::string target = req_parser.get().target().to_string();
-        
-        int first_slash = target.find("/", 1);
-
-        if (static_paths_.find(target.substr(0, first_slash)) != static_paths_.end())
+        std::string route_str = route.first;
+        if (route_str.find(target) == 0 && route_str.size() < match_len)
         {
-            return session::ParseRequestType::STATICTYPE;
-        }
-        else if (echo_paths_.find(target.substr(0, first_slash)) != echo_paths_.end())
-        {
-            return session::ParseRequestType::ECHOTYPE;
-        }
-        else
-        {
-            return session::ParseRequestType::BADREQUEST;
+            result = route_str;
+            match_len = route_str.size();
         }
     }
-    Logger::logInfo("Session - parse_request: wrong method:");
-    Logger::logInfo(req_parser.get().method_string().to_string());
-    return session::ParseRequestType::NONGET;
+    Logger::logInfo("Target " + target + " has been matched with route " + result);
+    return result;
 }
 
 void session::handle_write(const boost::system::error_code& error)
