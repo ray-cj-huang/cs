@@ -12,7 +12,9 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 
 std::unordered_map<std::string, request_handler_factory*> TEST_ROUTES = {
+  {"/", new echo_request_handler_factory()}, // TODO: Change to 404 handler
   {"/echo", new echo_request_handler_factory()},
+  {"/echo2", new echo_request_handler_factory()},
   {"/static", new static_request_handler_factory("../tests/static_files/")}
 };
 
@@ -35,6 +37,10 @@ class SessionTest : public ::testing::Test {
       // allocate on heap in case we delete the session (in case of error)
       session* new_session = new session(io_service_, TEST_ROUTES);
       new_session->handle_write(error);
+    }
+
+    std::string testMatch(std::string target) {
+      return session_.match(target);
     }
 };
 
@@ -84,6 +90,56 @@ TEST_F(SessionTest, HandleReadError) {
   EXPECT_NE(res.body().data, test_string);
   EXPECT_NE(res.body().size, test_num);
 }
+
+TEST_F(SessionTest, HandleReadBadHTTP) {
+  char test_string[] = "BAD REQUEST\r\n\r\n";
+  int test_num = 1026;
+  boost::system::error_code no_error = boost::system::error_code();
+  ASSERT_FALSE(no_error);
+
+  http::response<http::buffer_body> res = testHandleRead(no_error, test_string, test_num);
+  EXPECT_NE(res.body().data, test_string);
+  EXPECT_NE(res.body().size, test_num);
+}
+
+TEST_F(SessionTest, HandleReadNonGet) {
+  char test_string[] = "POST /echo HTTP/1.1\r\n\r\n";
+  int test_num = 1026;
+  boost::system::error_code no_error = boost::system::error_code();
+  ASSERT_FALSE(no_error);
+
+  http::response<http::buffer_body> res = testHandleRead(no_error, test_string, test_num);
+  EXPECT_NE(res.body().data, test_string);
+  EXPECT_NE(res.body().size, test_num);
+}
+
+TEST_F(SessionTest, HandleReadBadPath) {
+  char test_string[] = "GET /notaprefix HTTP/1.1\r\n\r\n";
+  int test_num = 1026;
+  boost::system::error_code no_error = boost::system::error_code();
+  ASSERT_FALSE(no_error);
+
+  http::response<http::buffer_body> res = testHandleRead(no_error, test_string, test_num);
+  EXPECT_NE(res.body().data, test_string);
+  EXPECT_NE(res.body().size, test_num);
+}
+
+TEST_F(SessionTest, MatchEmpty) {
+  EXPECT_EQ(testMatch(""), "/");
+}
+
+TEST_F(SessionTest, MatchExact) {
+  EXPECT_EQ(testMatch("/echo"), "/echo");
+}
+
+TEST_F(SessionTest, MatchPrefix) {
+  EXPECT_EQ(testMatch("/ec"), "/echo");
+}
+
+TEST_F(SessionTest, MatchNoMatches) {
+  EXPECT_EQ(testMatch("/foobar"), "");
+}
+
 
 TEST_F(SessionTest, HandleWriteSucceeds) {
   boost::system::error_code no_error = boost::system::error_code();

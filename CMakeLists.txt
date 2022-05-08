@@ -76,6 +76,14 @@ target_link_libraries(request_handler_test request_handler_lib echo_request_hand
     static_request_handler_lib gtest_main logger Boost::system
     Boost::thread Boost::regex Boost::log_setup Boost::log)
 
+add_executable(request_handler_factory_test tests/request_handler_factory_test.cc)
+target_link_libraries(request_handler_factory_test 
+    echo_request_handler_factory_lib static_request_handler_factory_lib
+    echo_request_handler_lib static_request_handler_lib
+    request_handler_lib 
+    gtest_main logger Boost::system Boost::thread Boost::regex 
+    Boost::log_setup Boost::log)
+    
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main logger Boost::system
     Boost::thread Boost::regex Boost::log_setup Boost::log)
@@ -85,6 +93,7 @@ gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/t
 gtest_discover_tests(session_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(request_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(request_handler_factory_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Add integration test
 add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test/test.sh)
@@ -95,4 +104,4 @@ generate_coverage_report(
     TARGETS server server_lib session_lib config_parser_lib request_handler_lib
         echo_request_handler_lib static_request_handler_lib
         echo_request_handler_factory_lib static_request_handler_factory_lib
-    TESTS server_test session_test config_parser_test request_handler_test)
+    TESTS server_test session_test config_parser_test request_handler_test request_handler_factory_test)

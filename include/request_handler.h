@@ -12,6 +12,7 @@ namespace http = beast::http;
 class request_handler
 {
     friend class RequestHandlerTest;
+    friend class RequestHandlerFactoryTest;
     public:
         request_handler(std::string location, std::string url);
         void put_data(char* req_data, size_t bytes_transferred);
