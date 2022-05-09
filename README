@@ -4,7 +4,47 @@ A simple web server designed for CS 130.
 
 ## How the source code is laid out
 
-To be added soon!
+Our source code repository is laid out like the following:
+
+```
+pushin-p
+├── CMakeLists.txt
+├── cmake/
+├── configs/
+├── docker/
+├── include/
+├── src/
+├── static/
+└── tests/
+    ├── integration_tests/
+    ├── static_files/
+    └── test_configs/
+```
+
+The CMakeLists.txt file contains information used to generate a makefile to build and link
+our source code and tests. The cmake/ directory contains configs used in this process, for
+example our code coverage config.
+
+The configs/ directory contains webserver config files that contain information like port
+and route mappings. These files are parsed on webserver startup.
+
+The docker/ directory contains various config files used to generate Docker containers for
+our project. There is currently a container for our webserver and for our coverage test.
+
+The include/ directory contains header files for various classes and interfaces used in our
+webserver. These header files are implemented in the src/ directory. This includes server, 
+session, config parser, request handler, factory, and logger classes. 
+
+Our top level class is server_main.cc. It takes a webserver config file as an argument and
+uses the config_parser class to extract the relevant information. This info is used to
+create a list of route mappings and instantiate a server instance, which opens a new session
+for each client.
+
+The static/ directory contains static files that are served by our webserver's static
+request handler, if one is specified.
+
+The tests/ directory contains various unit and integration tests. This directory also
+includes various static files used to perform these tests.
 
 ## How to build, test, and run the code
 
