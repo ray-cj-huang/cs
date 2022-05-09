@@ -25,6 +25,7 @@
 
 using boost::asio::ip::tcp;
 
+// GCOVR_EXCL_START
 int main(int argc, char* argv[]) {
   try {
     Logger::init_logging();
@@ -77,3 +78,4 @@ int main(int argc, char* argv[]) {
   Logger::logInfo("Server Terminated.");
   return 0;
 }
+// GCOVR_EXCL_STOP
