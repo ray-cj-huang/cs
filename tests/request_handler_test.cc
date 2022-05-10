@@ -16,39 +16,17 @@ class RequestHandlerTest : public ::testing::Test {
     
     http::response<http::buffer_body> res;
 
-    bool testEchoPut(char* buf, size_t size) {
-        echo_request_handler erh = echo_request_handler("/echo", "/echo");
-        erh.put_data(buf, size);
-        return erh.req_data_ == buf && erh.req_size_ == size;
-    }
-
-    bool testStaticPut(char* buf, size_t size) {
-        static_request_handler srh = static_request_handler("/static", 
-            "/static/foo", "../tests/static_files");
-        srh.put_data(buf, size);
-        return srh.req_data_ == buf && srh.req_size_ == size;
-    }
-
     void testEchoHandler(char* buf, size_t size) {
         echo_request_handler erh = echo_request_handler("/echo", "/echo");
-        erh.put_data(buf, size);
-        erh.write_response(res);
+        erh.serve(buf, size, res);
     }
 
     void testStaticHandler(char* buf, size_t size) {
         static_request_handler srh = static_request_handler("/static", 
             "/static/foo", "../tests/static_files");
-        srh.put_data(buf, size);
-        srh.write_response(res);
+        srh.serve(buf, size, res);
     }
 };
-
-TEST_F(RequestHandlerTest, putDataSucceeds) {
-    char buf[] = "hi";
-    size_t size = std::strlen(buf);
-    EXPECT_EQ(testEchoPut(buf, size), true);
-    EXPECT_EQ(testStaticPut(buf, size), true);
-}
 
 TEST_F(RequestHandlerTest, echoWriteSucceeds) {
     char buf[] = "hi";

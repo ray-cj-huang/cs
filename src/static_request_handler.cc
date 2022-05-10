@@ -19,13 +19,11 @@ static_request_handler::static_request_handler(
 {
 }
 
-void static_request_handler::write_response(
-        http::response<http::buffer_body> &res)
-{   
+status static_request_handler::serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) {
     const std::string PAGE_404_PATH = "../static/404_error.html";
     http::request_parser<http::string_body> req_parser;
     boost::beast::error_code ec;
-    std::string string_data(req_data_);
+    std::string string_data(req_data);
     size_t n_bytes = req_parser.put(boost::asio::buffer(string_data), ec);
 
     std::string target = req_parser.get().target().to_string();
@@ -64,6 +62,10 @@ void static_request_handler::write_response(
     if (default_404) {
         extension = static_request_handler::HTML;
         res.result(http::status::not_found);
+        std::string message = "404 Error Page";
+        Logger::logError(message);
+        res.set(http::field::content_type, "text/html");
+        return {false, message};
     }
     else {
         // no extension defaults to unsupported
@@ -76,33 +78,34 @@ void static_request_handler::write_response(
     if (extension == static_request_handler::TXT)
     {
         res.set(http::field::content_type, "text/plain");
-        Logger::logInfo("static_request_handler - write_response - .txt extension");
+        Logger::logInfo("static_request_handler - serve - .txt extension");
     }
     else if (extension == static_request_handler::HTML)
     {
         res.set(http::field::content_type, "text/html");
-        Logger::logInfo("static_request_handler - write_response - .html extension");
+        Logger::logInfo("static_request_handler - serve - .html extension");
     }
     else if (extension == static_request_handler::JPG ||
               extension == static_request_handler::JPEG)
     {
         res.set(http::field::content_type, "image/jpeg");
-        Logger::logInfo("static_request_handler - write_response - .jpg extension");
+        Logger::logInfo("static_request_handler - serve - .jpg extension");
     }
     else if (extension == static_request_handler::ZIP)
     {
         res.set(http::field::content_type, "application/zip");
-        Logger::logInfo("static_request_handler - write_response - .zip extension");
+        Logger::logInfo("static_request_handler - serve - .zip extension");
     }
     else
     {   // unsupported extension -> default to text/plain
         res.set(http::field::content_type, "text/plain");
         Logger::logInfo(
-            "static_request_handler - write_response -" \
+            "static_request_handler - serve -" \
             "unsupported extension, defaulting to text/plain");
     }
 
     res.body().data = buffer;
     res.body().size = length;
-    Logger::logInfo("static_request_handler - write_response - success");
+    Logger::logInfo("static_request_handler - serve - success");
+    return {true, ""};
 }

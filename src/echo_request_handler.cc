@@ -12,12 +12,11 @@ echo_request_handler::echo_request_handler(
 {
 }
 
-void echo_request_handler::write_response(
-        http::response<http::buffer_body> &res)
-{
+status echo_request_handler::serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) {
     res.result(http::status::ok);
     res.set(http::field::content_type, "text/plain");
-    res.body().data = req_data_;
-    res.body().size = req_size_;
-    Logger::logInfo("echo_request_handler - write_response - success");
+    res.body().data = req_data;
+    res.body().size = bytes_transferred;
+    Logger::logInfo("echo_request_handler - serve - success");
+    return {true, ""};
 }

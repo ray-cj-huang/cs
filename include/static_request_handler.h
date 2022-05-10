@@ -20,15 +20,13 @@ class static_request_handler: public request_handler
             std::string url,
             std::string root);
 
-        void write_response(
-            http::response<http::buffer_body> &res);
+        status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res);
 
         const std::string TXT = ".txt";
         const std::string HTML = ".html";
         const std::string JPG = ".jpg";
         const std::string JPEG = ".jpeg";
         const std::string ZIP = ".zip";
-    
     private:
         std::string root_;
 };

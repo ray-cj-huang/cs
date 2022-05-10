@@ -63,9 +63,7 @@ void session::handle_read(const boost::system::error_code& error,
         req_handler = factory->create(handler_path, target);
         Logger::logInfo("Session - Used factory to create request handler.");
     }
-
-    req_handler->put_data(data, bytes_transferred);
-    req_handler->write_response(res_);
+    req_handler->serve(data, bytes_transferred,res_);
     http::async_write(socket_,
             res_,
             boost::bind(&session::handle_write, this,
