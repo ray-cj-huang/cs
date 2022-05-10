@@ -33,10 +33,10 @@ class SessionTest : public ::testing::Test {
         return new_session->res_;
     }
 
-    void testHandleWrite(const boost::system::error_code& error) {
+    void testHandleWrite() {
       // allocate on heap in case we delete the session (in case of error)
       session* new_session = new session(io_service_, TEST_ROUTES);
-      new_session->handle_write(error);
+      new_session->handle_write();
     }
 
     std::string testMatch(std::string target) {
@@ -109,8 +109,8 @@ TEST_F(SessionTest, HandleReadNonGet) {
   ASSERT_FALSE(no_error);
 
   http::response<http::buffer_body> res = testHandleRead(no_error, test_string, test_num);
-  EXPECT_NE(res.body().data, test_string);
-  EXPECT_NE(res.body().size, test_num);
+  EXPECT_EQ(res.body().data, test_string);
+  EXPECT_EQ(res.body().size, test_num);
 }
 
 TEST_F(SessionTest, HandleReadBadPath) {
@@ -140,17 +140,7 @@ TEST_F(SessionTest, MatchNoMatches) {
   EXPECT_EQ(testMatch("/foobar"), "");
 }
 
-
 TEST_F(SessionTest, HandleWriteSucceeds) {
-  boost::system::error_code no_error = boost::system::error_code();
-  ASSERT_FALSE(no_error);
-  testHandleWrite(no_error);
-  SUCCEED();
-}
-
-TEST_F(SessionTest, HandleWriteError) {
-  boost::system::error_code error = boost::system::errc::make_error_code(boost::system::errc::not_supported);
-  ASSERT_TRUE(error);
-  testHandleWrite(error);
+  testHandleWrite();
   SUCCEED();
 }

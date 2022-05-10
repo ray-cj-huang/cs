@@ -32,7 +32,7 @@ private:
 
   std::string match(std::string target);
 
-  void handle_write(const boost::system::error_code& error);
+  void handle_write();
 
   const std::string GET = "GET";
 

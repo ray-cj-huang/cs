@@ -53,28 +53,26 @@ status static_request_handler::serve(char* req_data, size_t bytes_transferred, h
     file.seekg(0, file.beg);
     buffer = new char[length];
     file.read(buffer, length);
-    
+
     file.close();
 
     int period_loc = target.find_last_of(".");
 
-    std::string extension;
     if (default_404) {
-        extension = static_request_handler::HTML;
         res.result(http::status::not_found);
         std::string message = "404 Error Page";
-        Logger::logError(message);
         res.set(http::field::content_type, "text/html");
+        res.body().data = buffer;
+        res.body().size = length;
         return {false, message};
     }
-    else {
-        // no extension defaults to unsupported
-        extension = period_loc == std::string::npos ?
-            "" : target.substr(period_loc, target.size()-period_loc);
 
-        res.result(http::status::ok);
-    }
-    
+    // no extension defaults to unsupported
+    std::string extension = period_loc == std::string::npos ?
+        "" : target.substr(period_loc, target.size()-period_loc);
+
+    res.result(http::status::ok);
+
     if (extension == static_request_handler::TXT)
     {
         res.set(http::field::content_type, "text/plain");
