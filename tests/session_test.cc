@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include "session.h"
 #include "request_handler_factory.h"
+#include "error_request_handler_factory.h"
 #include "echo_request_handler_factory.h"
 #include "static_request_handler_factory.h"
 
@@ -12,7 +13,7 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 
 std::unordered_map<std::string, request_handler_factory*> TEST_ROUTES = {
-  {"/", new echo_request_handler_factory()}, // TODO: Change to 404 handler
+  {"", new error_request_handler_factory()},
   {"/echo", new echo_request_handler_factory()},
   {"/echo2", new echo_request_handler_factory()},
   {"/static", new static_request_handler_factory("../tests/static_files/")}
@@ -125,7 +126,7 @@ TEST_F(SessionTest, HandleReadBadPath) {
 }
 
 TEST_F(SessionTest, MatchEmpty) {
-  EXPECT_EQ(testMatch(""), "/");
+  EXPECT_EQ(testMatch(""), "");
 }
 
 TEST_F(SessionTest, MatchExact) {

@@ -79,5 +79,92 @@ bin/server ../configs/server_config
 ```
 
 ## How to add a request handler
+We design the generic request handler with a simple constructor that defines the location & path and a serve function that is pure virtual as it will be implemented separately by each type of request handlers.
+```
+struct status {
+    bool success;
+    std::string err;
+};
 
-To be added soon!
+class request_handler {
+public:
+    request_handler(std::string location, std::string url);
+    virtual status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) = 0;
+protected:
+    std::string location_;
+    std::string url_;
+private:
+    friend class RequestHandlerTest;
+    friend class RequestHandlerFactoryTest;
+};
+```
+
+To add a new request handler, we can inherit the new class from request_handler. Then, we will need to implement the serve function to process the request.
+
+Example:
+```
+class error_request_handler: public request_handler
+{
+    friend class RequestHandlerTest;
+    public:
+        error_request_handler(std::string location, std::string url);
+        status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res);
+        const std::string HTML = ".html";
+};
+```
+
+Serve can be implemented many different ways. For example:
+```
+status error_request_handler::serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res)
+{
+    Logger::logInfo("Serving 404 Error Page");
+    std::string page_404_path = "../static/404_error.html";
+
+    int length = 0;
+    char* buffer;
+
+    std::ifstream file(page_404_path);
+
+    file.seekg(0, file.end);
+    length = file.tellg();
+    file.seekg(0, file.beg);
+    buffer = new char[length];
+    file.read(buffer, length);
+
+    file.close();
+
+    std::string extension;
+    extension = error_request_handler::HTML;
+
+    res.result(http::status::not_found);
+    res.set(http::field::content_type, "text/html");
+    res.body().data = buffer;
+    res.body().size = length;
+
+    Logger::logInfo("error_request_handler - serve - success");
+    return {true, ""};
+}
+```
+
+Make sure to return Status, an interface of a boolean, which defines if the request handler succeeded or not, and an error message. 
+
+Each personalized request handler is wrapped around a request handler factory, which generates the request handler.
+For example:
+```
+class error_request_handler_factory: public request_handler_factory
+{
+    friend class RequestHandlerFactoryTest;
+    public:
+        request_handler* create(std::string location, std::string url);
+};
+```
+
+The create function just dynamically allocates an instance of the request handler, hence the name request handler factory.
+An example of its implementation is:
+```
+request_handler* error_request_handler_factory::create(
+    std::string location, std::string url) 
+{
+    return new error_request_handler(location, url);
+}
+```

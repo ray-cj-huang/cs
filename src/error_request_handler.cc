@@ -22,6 +22,12 @@ status error_request_handler::serve(char* req_data, size_t bytes_transferred, ht
 
     std::ifstream file(page_404_path);
 
+    file.seekg(0, file.end);
+    length = file.tellg();
+    file.seekg(0, file.beg);
+    buffer = new char[length];
+    file.read(buffer, length);
+
     file.close();
 
     std::string extension;

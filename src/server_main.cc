@@ -19,6 +19,7 @@
 #include "server.h"
 #include "config_parser.h"
 #include "request_handler_factory.h"
+#include "error_request_handler_factory.h"
 #include "echo_request_handler_factory.h"
 #include "static_request_handler_factory.h"
 #include "logger.h"
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
                         "\", filepath: \"" + elem.second + "\"}, ";
         routes.insert({{elem.first, new static_request_handler_factory(elem.second)}});
     }
+    routes.insert({{"", new error_request_handler_factory()}});
 
     boost::asio::io_service io_service;
 

@@ -40,9 +40,6 @@ void session::handle_read(const boost::system::error_code& error,
   request_handler_factory* factory;
   request_handler* req_handler;
 
-  request_handler_factory* err_factory = new error_request_handler_factory();
-  request_handler* err_req_handler = err_factory->create("/", "/");
-
   http::request_parser<http::string_body> req_parser;
   boost::beast::error_code ec;
   std::string string_data(data);
@@ -50,10 +47,15 @@ void session::handle_read(const boost::system::error_code& error,
 
   if (!req_parser.is_done() || ec)
   {
-      Logger::logError("Session - bad HTTP request.");
-      err_req_handler->serve(data, bytes_transferred,res_);
-      delete err_req_handler;
-      delete err_factory;
+      Logger::logInfo("Session - bad HTTP request.");
+      factory = routes_[""];
+      req_handler = factory->create("", "");
+      req_handler->serve(data, bytes_transferred, res_);
+      http::async_write(socket_,
+        res_,
+        boost::bind(&session::handle_write, this));
+      Logger::logInfo("Session - Request handler successfully wrote response.");
+      delete req_handler;
       return;
   }
 
@@ -61,17 +63,13 @@ void session::handle_read(const boost::system::error_code& error,
   std::string handler_path = match(target.substr(0, target.find("/", 1)));
   if (handler_path == "")
   {
-      Logger::logError("Session - no matching handler for " + target + " found.");
-      err_req_handler->serve(data, bytes_transferred,res_);
-      delete err_req_handler;
-      delete err_factory;
-      return;
+      Logger::logInfo("Session - no matching handler for " + target + " found.");
   }
   factory = routes_[handler_path];
   req_handler = factory->create(handler_path, target);
   Logger::logInfo("Session - Used factory to create request handler.");
 
-  req_handler->serve(data, bytes_transferred,res_);
+  req_handler->serve(data, bytes_transferred, res_);
   http::async_write(socket_,
           res_,
           boost::bind(&session::handle_write, this));
