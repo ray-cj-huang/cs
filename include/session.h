@@ -8,7 +8,11 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 
+#include "request_handler.h"
+#include "error_request_handler.h"
 #include "request_handler_factory.h"
+#include "error_request_handler_factory.h"
+
 #include "logger.h"
 
 namespace beast = boost::beast;

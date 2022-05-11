@@ -56,34 +56,36 @@ add_executable(server src/server_main.cc)
 target_link_libraries(server server_lib session_lib config_parser_lib
     logger  
     echo_request_handler_factory_lib
-    static_request_handler_factory_lib 
+    static_request_handler_factory_lib
+    error_request_handler_factory_lib
     echo_request_handler_lib
-    static_request_handler_lib 
+    static_request_handler_lib
+    error_request_handler_lib
     request_handler_lib
     Boost::system Boost::thread Boost::regex
     Boost::log_setup Boost::log)
 
 # Update test executable name, srcs, and deps
 add_executable(server_test tests/server_test.cc)
-target_link_libraries(server_test server_lib session_lib gtest_main logger
-    echo_request_handler_lib static_request_handler_lib request_handler_lib
+target_link_libraries(server_test server_lib session_lib gtest_main logger error_request_handler_factory_lib
+    echo_request_handler_lib static_request_handler_lib error_request_handler_lib request_handler_lib 
     Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(session_test tests/session_test.cc)
-target_link_libraries(session_test session_lib gtest_main logger
-    echo_request_handler_factory_lib static_request_handler_factory_lib 
-    echo_request_handler_lib static_request_handler_lib request_handler_lib
+target_link_libraries(session_test session_lib gtest_main logger 
+    echo_request_handler_factory_lib static_request_handler_factory_lib error_request_handler_factory_lib 
+    echo_request_handler_lib static_request_handler_lib error_request_handler_lib request_handler_lib 
     Boost::system Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(request_handler_test tests/request_handler_test.cc)
-target_link_libraries(request_handler_test echo_request_handler_lib static_request_handler_lib
-    request_handler_lib gtest_main logger Boost::system
+target_link_libraries(request_handler_test echo_request_handler_lib static_request_handler_lib error_request_handler_lib 
+    request_handler_lib gtest_main logger Boost::system 
     Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(request_handler_factory_test tests/request_handler_factory_test.cc)
 target_link_libraries(request_handler_factory_test 
-    echo_request_handler_factory_lib static_request_handler_factory_lib
-    echo_request_handler_lib static_request_handler_lib request_handler_lib 
+    echo_request_handler_factory_lib static_request_handler_factory_lib error_request_handler_factory_lib 
+    echo_request_handler_lib static_request_handler_lib error_request_handler_lib request_handler_lib 
     gtest_main logger Boost::system Boost::thread Boost::regex 
     Boost::log_setup Boost::log)
     
@@ -105,6 +107,6 @@ add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR
 include(cmake/CodeCoverageReportConfig.cmake)
 generate_coverage_report(
     TARGETS server server_lib session_lib config_parser_lib
-        echo_request_handler_lib static_request_handler_lib
-        echo_request_handler_factory_lib static_request_handler_factory_lib request_handler_lib
+        error_request_handler_lib echo_request_handler_lib static_request_handler_lib
+        error_request_handler_factory_lib echo_request_handler_factory_lib static_request_handler_factory_lib request_handler_lib
     TESTS server_test session_test config_parser_test request_handler_test request_handler_factory_test)

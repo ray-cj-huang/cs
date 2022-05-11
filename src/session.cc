@@ -1,5 +1,4 @@
 #include "session.h"
-#include "request_handler.h"
 
 session::session(boost::asio::io_service& io_service, std::unordered_map<std::string, request_handler_factory*> routes)
   : socket_(io_service),
@@ -41,6 +40,9 @@ void session::handle_read(const boost::system::error_code& error,
   request_handler_factory* factory;
   request_handler* req_handler;
 
+  request_handler_factory* err_factory = new error_request_handler_factory();
+  request_handler* err_req_handler = err_factory->create("/", "/");
+
   http::request_parser<http::string_body> req_parser;
   boost::beast::error_code ec;
   std::string string_data(data);
@@ -49,7 +51,9 @@ void session::handle_read(const boost::system::error_code& error,
   if (!req_parser.is_done() || ec)
   {
       Logger::logError("Session - bad HTTP request.");
-      // TODO: invoke 404 handler
+      err_req_handler->serve(data, bytes_transferred,res_);
+      delete err_req_handler;
+      delete err_factory;
       return;
   }
 
@@ -58,7 +62,9 @@ void session::handle_read(const boost::system::error_code& error,
   if (handler_path == "")
   {
       Logger::logError("Session - no matching handler for " + target + " found.");
-      // TODO: invoke 404 handler
+      err_req_handler->serve(data, bytes_transferred,res_);
+      delete err_req_handler;
+      delete err_factory;
       return;
   }
   factory = routes_[handler_path];
