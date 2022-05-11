@@ -43,10 +43,13 @@ add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(logger src/logger.cc)
 add_library(request_handler_lib src/request_handler.cc)
+add_library(error_request_handler_lib src/error_request_handler.cc)
 add_library(echo_request_handler_lib src/echo_request_handler.cc)
 add_library(static_request_handler_lib src/static_request_handler.cc)
+add_library(error_request_handler_factory_lib src/error_request_handler_factory.cc)
 add_library(echo_request_handler_factory_lib src/echo_request_handler_factory.cc)
 add_library(static_request_handler_factory_lib src/static_request_handler_factory.cc)
+
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
