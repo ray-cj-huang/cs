@@ -25,8 +25,10 @@ class NginxConfig {
   int GetPort(); // Get Port #
   std::unordered_set<std::string> echo_paths_;
   std::unordered_map<std::string, std::string> static_paths_;
+  std::unordered_map<std::string, std::string> CRUD_paths_;
   void GetPaths(std::unordered_map<std::string, std::string> &static_paths,
-                std::unordered_set<std::string> &echo_paths);
+                std::unordered_set<std::string> &echo_paths,
+                std::unordered_map<std::string, std::string> &CRUD_paths);
 
 };
 

@@ -23,7 +23,7 @@ class ConfigParserTest : public ::testing::Test {
     void testGetPaths(std::unordered_map<std::string, std::string> &static_paths, 
                       std::unordered_set<std::string> &echo_paths,
                       bool correct) {
-      out_config.GetPaths(out_config.static_paths_, out_config.echo_paths_);
+      out_config.GetPaths(out_config.static_paths_, out_config.echo_paths_, out_config.CRUD_paths_);
       bool equal_static = out_config.static_paths_ == static_paths;
       bool equal_echo = out_config.echo_paths_ == echo_paths;
       

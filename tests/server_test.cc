@@ -4,7 +4,7 @@
 #include "server.h"
 #include "session.h"
 
-static const int TEST_PORT = 80;
+static const int TEST_PORT = 8000;
 
 class ServerTest : public ::testing::Test {
   protected:

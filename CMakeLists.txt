@@ -46,21 +46,30 @@ add_library(request_handler_lib src/request_handler.cc)
 add_library(error_request_handler_lib src/error_request_handler.cc)
 add_library(echo_request_handler_lib src/echo_request_handler.cc)
 add_library(static_request_handler_lib src/static_request_handler.cc)
+add_library(crud_request_handler_lib src/crud_request_handler.cc)
 add_library(error_request_handler_factory_lib src/error_request_handler_factory.cc)
 add_library(echo_request_handler_factory_lib src/echo_request_handler_factory.cc)
 add_library(static_request_handler_factory_lib src/static_request_handler_factory.cc)
-
+add_library(crud_request_handler_factory_lib src/crud_request_handler_factory.cc)
+add_library(file_system_base_lib src/file_system_base.cc)
+add_library(file_system_real_lib src/file_system_real.cc)
+# target_link_libraries(file_system_real_lib file_system_base_lib)
+# add_library(file_system_fake_lib src/file_system_fake.cc) # add after implementation
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
 target_link_libraries(server server_lib session_lib config_parser_lib
-    logger  
+    logger
+    file_system_real_lib
+    file_system_base_lib
     echo_request_handler_factory_lib
     static_request_handler_factory_lib
     error_request_handler_factory_lib
+    crud_request_handler_factory_lib
     echo_request_handler_lib
     static_request_handler_lib
     error_request_handler_lib
+    crud_request_handler_lib
     request_handler_lib
     Boost::system Boost::thread Boost::regex
     Boost::log_setup Boost::log)

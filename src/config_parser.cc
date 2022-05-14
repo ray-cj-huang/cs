@@ -24,6 +24,7 @@ const int STATIC_ENDPOINT_SIZE = 3;
 const std::string ENDPOINT = "location";
 const std::string STATIC_NAME = "StaticHandler";
 const std::string ECHO_NAME = "EchoHandler";
+const std::string CRUD_NAME = "CRUDHandler";
 const std::string ROOT = "root";
 
 // To get the port number from config
@@ -48,7 +49,8 @@ int NginxConfig::GetPort() {
 }
 
 void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_paths,
-                           std::unordered_set<std::string> &echo_paths) {
+                           std::unordered_set<std::string> &echo_paths,
+                           std::unordered_map<std::string, std::string> &CRUD_paths) {
 
   for (auto singleStatement : statements_) {
     if (singleStatement->tokens_.size() && singleStatement->tokens_[0] == ENDPOINT && singleStatement->tokens_.size() >= ENDPOINT_MIN_SIZE) {
@@ -77,11 +79,28 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
         echo_paths.insert(endpoint);
         Logger::logInfo("Echo path " + endpoint + " successfully parsed.");
       }
+      else if (endpoint_type == CRUD_NAME) {
+        if (singleStatement->tokens_.size() >= STATIC_ENDPOINT_SIZE) {
+          if (singleStatement->child_block_) {
+            for (auto childStatement : singleStatement->child_block_->statements_) {
+              if (childStatement->tokens_.size() >= 2 && childStatement->tokens_[0] == ROOT) {
+                std::string directory = childStatement->tokens_[1];
+                CRUD_paths.insert( {{ endpoint, directory }});
+                Logger::logInfo("CRUD path " + endpoint + " successfully parsed.");
+              }
+            }
+          }
+        }
+        else {
+          Logger::logWarning("When specifying a CRUD endpoint in the config file, you need to specify both the endpoint and the path.");
+        }
+        
+      }
 
     }
 
     if (singleStatement->child_block_.get() != nullptr) {
-      singleStatement->child_block_->GetPaths(static_paths, echo_paths);
+      singleStatement->child_block_->GetPaths(static_paths, echo_paths, CRUD_paths);
     }
   }
 }
