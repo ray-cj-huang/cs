@@ -47,20 +47,22 @@ add_library(error_request_handler_lib src/error_request_handler.cc)
 add_library(echo_request_handler_lib src/echo_request_handler.cc)
 add_library(static_request_handler_lib src/static_request_handler.cc)
 add_library(crud_request_handler_lib src/crud_request_handler.cc)
+target_link_libraries(crud_request_handler_lib Boost::filesystem)
 add_library(error_request_handler_factory_lib src/error_request_handler_factory.cc)
 add_library(echo_request_handler_factory_lib src/echo_request_handler_factory.cc)
 add_library(static_request_handler_factory_lib src/static_request_handler_factory.cc)
 add_library(crud_request_handler_factory_lib src/crud_request_handler_factory.cc)
 add_library(file_system_base_lib src/file_system_base.cc)
+target_link_libraries(file_system_base_lib Boost::filesystem)
 add_library(file_system_real_lib src/file_system_real.cc)
-# target_link_libraries(file_system_real_lib file_system_base_lib)
-# add_library(file_system_fake_lib src/file_system_fake.cc) # add after implementation
+add_library(file_system_fake_lib src/file_system_fake.cc) # add after implementation
 
 # Update executable name, srcs, and deps
 add_executable(server src/server_main.cc)
 target_link_libraries(server server_lib session_lib config_parser_lib
     logger
     file_system_real_lib
+    file_system_fake_lib
     file_system_base_lib
     echo_request_handler_factory_lib
     static_request_handler_factory_lib
@@ -102,12 +104,17 @@ add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main logger Boost::system
     Boost::thread Boost::regex Boost::log_setup Boost::log)
 
+add_executable(file_system_fake_test tests/file_system_fake_test.cc)
+target_link_libraries(file_system_fake_test file_system_fake_lib file_system_base_lib gtest_main logger 
+    Boost::system Boost::thread)
+
 # Update with test binary
 gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(request_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(request_handler_factory_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(file_system_fake_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Add integration test
 add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test/test.sh)
@@ -116,6 +123,7 @@ add_test(NAME IntegrationTest COMMAND ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR
 include(cmake/CodeCoverageReportConfig.cmake)
 generate_coverage_report(
     TARGETS server server_lib session_lib config_parser_lib
-        error_request_handler_lib echo_request_handler_lib static_request_handler_lib
-        error_request_handler_factory_lib echo_request_handler_factory_lib static_request_handler_factory_lib request_handler_lib
-    TESTS server_test session_test config_parser_test request_handler_test request_handler_factory_test)
+        error_request_handler_lib echo_request_handler_lib static_request_handler_lib crud_request_handler_lib
+        error_request_handler_factory_lib echo_request_handler_factory_lib static_request_handler_factory_lib crud_request_handler_factory_lib request_handler_lib
+        file_system_real_lib file_system_fake_lib file_system_base_lib
+    TESTS server_test session_test config_parser_test request_handler_test request_handler_factory_test file_system_fake_test)
