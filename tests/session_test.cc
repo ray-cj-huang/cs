@@ -13,7 +13,7 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 
 std::unordered_map<std::string, request_handler_factory*> TEST_ROUTES = {
-  {"", new error_request_handler_factory()},
+  {"/", new error_request_handler_factory()},
   {"/echo", new echo_request_handler_factory()},
   {"/echo2", new echo_request_handler_factory()},
   {"/static", new static_request_handler_factory("../tests/static_files/")}
@@ -126,7 +126,7 @@ TEST_F(SessionTest, HandleReadBadPath) {
 }
 
 TEST_F(SessionTest, MatchEmpty) {
-  EXPECT_EQ(testMatch(""), "");
+  EXPECT_EQ(testMatch(""), "/");
 }
 
 TEST_F(SessionTest, MatchExact) {
@@ -134,11 +134,15 @@ TEST_F(SessionTest, MatchExact) {
 }
 
 TEST_F(SessionTest, MatchPrefix) {
-  EXPECT_EQ(testMatch("/ec"), "/echo");
+  EXPECT_EQ(testMatch("/echo/location"), "/echo");
+}
+
+TEST_F(SessionTest, MatchPrefixLongest) {
+  EXPECT_EQ(testMatch("/echo2location"), "/echo2");
 }
 
 TEST_F(SessionTest, MatchNoMatches) {
-  EXPECT_EQ(testMatch("/foobar"), "");
+  EXPECT_EQ(testMatch("/foobar"), "/");
 }
 
 TEST_F(SessionTest, HandleWriteSucceeds) {

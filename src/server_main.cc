@@ -54,6 +54,9 @@ int main(int argc, char* argv[]) {
     config.GetPaths(config.static_paths_, config.echo_paths_, config.CRUD_paths_);
 
     std::unordered_map<std::string, request_handler_factory*> routes;
+    // inserting 404 handler first ensures that its path won't be overwritten
+    routes.insert({{"/", new error_request_handler_factory()}});
+
     std::string echo_paths = "", static_paths = "", CRUD_paths = "";
     for (const auto& elem: config.echo_paths_) // search for all echo handlers specified in config
     {
@@ -75,7 +78,6 @@ int main(int argc, char* argv[]) {
                         "\", filepath: \"" + elem.second + "\"}, ";
         routes.insert({{elem.first, new crud_request_handler_factory(elem.second, fs)}});
     }
-    routes.insert({{"", new error_request_handler_factory()}});
 
     boost::asio::io_service io_service;
 

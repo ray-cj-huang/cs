@@ -49,7 +49,7 @@ void session::handle_read(const boost::system::error_code& error,
   if (!req_parser.is_done() || ec)
   {
       Logger::logInfo("Session - bad HTTP request.");
-      factory = routes_[""];
+      factory = routes_["/"];
       req_handler = factory->create("", "");
       req_handler->serve(data, bytes_transferred, res_);
       http::async_write(socket_,
@@ -62,7 +62,7 @@ void session::handle_read(const boost::system::error_code& error,
 
   std::string target = req_parser.get().target().to_string();
   std::string handler_path = match(target.substr(0, target.find("/", 1)));
-  if (handler_path == "")
+  if (handler_path == "/")
   {
       Logger::logInfo("Session - no matching handler for " + target + " found.");
   }
@@ -79,15 +79,15 @@ void session::handle_read(const boost::system::error_code& error,
 }
 
 // Match the target prefix with the longest matching handler path.
-// Returns empty string "" if no matches are found.
+// Returns string "/" for 404 handler if no matches are found.
 std::string session::match(std::string target)
 {
-    std::string result = "";
-    int match_len = INT_MAX;
+    std::string result = "/";
+    int match_len = 0;
     for (const auto& route : routes_)
     {
         std::string route_str = route.first;
-        if (route_str.find(target) == 0 && route_str.size() < match_len)
+        if (target.rfind(route_str, 0) == 0 && route_str.size() > match_len)
         {
             result = route_str;
             match_len = route_str.size();
