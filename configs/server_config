@@ -15,7 +15,7 @@ server {
   location /echo1 EchoHandler {
   }
 
-  location /crud CRUDHandler {
+  location /api CRUDHandler {
     root ../crud/;
   }
 

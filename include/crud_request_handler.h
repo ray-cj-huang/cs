@@ -20,9 +20,10 @@ class crud_request_handler: public request_handler
         status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) override;
 
     private:
-        http::status create(
+        status create(
             const boost::filesystem::path& path, 
-            const http::request<http::string_body>& request
+            const http::request<http::string_body>& request,
+            http::response<http::buffer_body>& response
         ) const;
         http::status retrieve(
             const boost::filesystem::path& path,
@@ -43,6 +44,7 @@ class crud_request_handler: public request_handler
             const http::request<http::string_body>& request, 
             http::response<http::dynamic_body>& response
         ) const;
+        int get_next_id(const boost::filesystem::path& path) const;
 
         std::string root_;
         FileSystem* fs_; // used for primitive dependency injection

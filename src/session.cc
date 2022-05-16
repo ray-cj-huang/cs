@@ -41,6 +41,7 @@ void session::handle_read(const boost::system::error_code& error,
   request_handler* req_handler;
 
   http::request_parser<http::string_body> req_parser;
+  req_parser.eager(true);
   boost::beast::error_code ec;
   std::string string_data(data);
   size_t n_bytes = req_parser.put(boost::asio::buffer(string_data), ec);
