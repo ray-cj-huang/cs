@@ -24,6 +24,10 @@ server {
   location /echo1 EchoHandler {
   }
 
+  location /api CRUDHandler {
+    root ./crud/;
+  }
+
 }" > example_config_test
 
 ./bin/server example_config_test &
@@ -83,6 +87,137 @@ else
     kill -9 $pid_server
     exit 1;
 fi
+
+
+# Acknowledgement: reference code: 
+# https://code.cs130.org/plugins/gitiles/buugle/+/8b8b0ff3ed34b7401f2235df8e5c3cfb7196b8a4/tests/integration_test.sh
+# CRUD tests
+mkdir crud
+
+# Create Test 1
+echo -ne "{\"id\":1}" > crud_test_sample_result
+curl -X POST http://localhost:9080/api/objects -d "{\"name\": \"object 1\"}" > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Create Test 1"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# Create Test 2
+echo -ne "{\"id\":2}" > crud_test_sample_result
+curl -X POST http://localhost:9080/api/objects -d "{\"name\": \"object 2\"}" > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Create Test 2"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# Retrieve Test 1
+echo -ne "{\"name\": \"object 1\"}" > crud_test_sample_result
+curl -X GET http://localhost:9080/api/objects/1 > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Retrieve Test 1"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# Retrieve Test 2
+echo -ne "{\"name\": \"object 2\"}" > crud_test_sample_result
+curl -X GET http://localhost:9080/api/objects/2 > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Retrieve Test 2"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# Update Test 1
+echo -ne "{\"name\": \"updated object\"}" > crud_test_sample_result
+curl -X PUT http://localhost:9080/api/objects/2 -d "{\"name\": \"updated object\"}"
+curl -X GET http://localhost:9080/api/objects/2 > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Update Test 1"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# List Test 1
+echo -ne "[1, 2]" > crud_test_sample_result
+curl -X GET http://localhost:9080/api/objects/ > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for List Test 1"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+# Delete Test 1
+echo -ne "[2]" > crud_test_sample_result
+curl -X DELETE http://localhost:9080/api/objects/1
+curl -X GET http://localhost:9080/api/objects/ > crud_test_actual_result
+
+crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
+if [ -z "$crud_test_diff" ]
+then
+    echo "PASSED Integration Test for Delete Test 1"
+else
+    echo "Compared actual:"
+    cat crud_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat crud_test_sample_result 1>&2
+    exit_code=1
+fi
+
+rm -rf crud
+rm crud_test_sample_result
+rm crud_test_actual_result
 
 kill -9 $pid_server
 exit 0
