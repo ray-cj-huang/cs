@@ -58,10 +58,10 @@ status crud_request_handler::serve(char* req_data, size_t bytes_transferred, htt
     size_t n_bytes = req_parser.put(boost::asio::buffer(string_data), ec);
 
     auto verb = req_parser.get().method();
-
     std::string full_path(req_parser.get().target());
     std::string rel_path = full_path.substr(full_path.find(location_) + location_.length());
     std::string path = path_cat(root_, rel_path);
+
     if (verb == http::verb::post) {
         return create(path, req_parser.get(), res);
     }
@@ -71,7 +71,14 @@ status crud_request_handler::serve(char* req_data, size_t bytes_transferred, htt
         }
         return list(path, req_parser.get(), res);
     }
-    return {false, ""};
+    else if (verb == http::verb::put) {
+      return update(path, req_parser.get(), res);
+    }
+    else if (verb == http::verb::delete_) {
+      return remove(path, req_parser.get(), res);
+    }
+
+    return {false, "cannot handle request"};
 }
 
 status crud_request_handler::create(
@@ -148,8 +155,50 @@ status crud_request_handler::update(
     const http::request<http::string_body>& request, 
     http::response<http::buffer_body>& response
 ) const {
-    // TODO: helper private function to update existing instance content according to request body
-    return {true, ""};
+  if (fs_->exists(path)) {
+    try {
+      bool flag = fs_->upload_file(path, request.body());
+      if (flag) {
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "text/plain");
+        std::string data_string = "File: " + path.string() + " updated";
+        auto buf = new char[data_string.size()];
+        memcpy(buf, data_string.c_str(), data_string.size());
+        response.body().data = buf;
+        response.body().size = data_string.size();
+        Logger::logInfo("crud_request_handler - serve - success");
+        return {true, ""};
+      }
+      else { // if file cannot be updated
+        response.result(http::status::internal_server_error);
+        response.set(http::field::content_type, "text/plain");
+        std::string data_string = "";
+        auto buf = new char[data_string.size()];
+        memcpy(buf, data_string.c_str(), data_string.size());
+        response.body().data = buf;
+        response.body().size = data_string.size();
+        Logger::logInfo("crud_request_handler - serve - failed");
+        return {false, "internal server error"};
+      }
+    } catch (std::exception &e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+        std::stringstream msg_stream;
+        msg_stream << "Exception: " << e.what();
+        std::string msg = msg_stream.str();
+        Logger::logError(msg);
+    }
+  }
+
+  // if the requested file does not exist 
+  response.result(http::status::bad_request);
+  response.set(http::field::content_type, "text/plain");
+  std::string data_string = "";
+  auto buf = new char[data_string.size()];
+  memcpy(buf, data_string.c_str(), data_string.size());
+  response.body().data = buf;
+  response.body().size = data_string.size();
+  Logger::logInfo("crud_request_handler - serve - failed");
+  return {false, "bad request"};
 }
 
 status crud_request_handler::remove( // keyword 'delete' cannot be customized
@@ -157,8 +206,64 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
     const http::request<http::string_body>& request, 
     http::response<http::buffer_body>& response
 ) const {
-    // TODO: helper private function to delete instance
-    return {true, ""};
+  if (fs_->exists(path)) {
+    try {
+      bool flag = fs_->remove(path);
+      if (flag) {
+        if (fs_->exists(path)) {
+          response.result(http::status::internal_server_error);
+          response.set(http::field::content_type, "text/plain");
+          std::string data_string = "";
+          auto buf = new char[data_string.size()];
+          memcpy(buf, data_string.c_str(), data_string.size());
+          response.body().data = buf;
+          response.body().size = data_string.size();
+          Logger::logInfo("crud_request_handler - serve - failed");
+          return {false, "internal server error"};
+        }
+
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "text/plain");
+        std::string data_string = "File: " + path.string() + " deleted";
+        auto buf = new char[data_string.size()];
+        memcpy(buf, data_string.c_str(), data_string.size());
+        response.body().data = buf;
+        response.body().size = data_string.size();
+        Logger::logInfo("crud_request_handler - serve - success");
+        // check if the file still exist after deletion
+        return {true, ""};
+      }
+      else { // if error occurs when deleting the file
+        response.result(http::status::internal_server_error);
+        response.set(http::field::content_type, "text/plain");
+        std::string data_string = "";
+        auto buf = new char[data_string.size()];
+        memcpy(buf, data_string.c_str(), data_string.size());
+        response.body().data = buf;
+        response.body().size = data_string.size();
+        Logger::logInfo("crud_request_handler - serve - failed");
+        return {false, "internal server error"};
+      }
+    } catch (std::exception &e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+        std::stringstream msg_stream;
+        msg_stream << "Exception: " << e.what();
+        std::string msg = msg_stream.str();
+        Logger::logError(msg);
+    }
+  }
+
+  // if the requested file does not exist 
+  response.result(http::status::bad_request);
+  response.set(http::field::content_type, "text/plain");
+  std::string data_string = "";
+  auto buf = new char[data_string.size()];
+  memcpy(buf, data_string.c_str(), data_string.size());
+  response.body().data = buf;
+  response.body().size = data_string.size();
+  Logger::logInfo("crud_request_handler - serve - failed");
+  return {false, "bad request"};
+
 }
 
 status crud_request_handler::list(
