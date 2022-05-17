@@ -2,8 +2,12 @@
 #include "file_system_base.h"
 #include "logger.h"
 #include <fstream>
+#include <filesystem>
+#include <boost/filesystem.hpp>
+
 namespace beast = boost::beast;
 namespace http = beast::http;
+namespace fs = boost::filesystem;
 
 crud_request_handler::crud_request_handler(std::string location, std::string url, std::string root, FileSystem* fs):
     request_handler(location, url),
@@ -81,13 +85,14 @@ status crud_request_handler::serve(char* req_data, size_t bytes_transferred, htt
     return {false, "cannot handle request"};
 }
 
+// Finds next available ID and writes POST body
 status crud_request_handler::create(
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request,
     http::response<http::buffer_body>& response
 ) const {
     // if the entity does not exist
-    if (!fs_->exists(path)) {
+    if (!fs_->is_directory(path)) {
         try {
             fs_->create_directories(path);
         }
@@ -105,15 +110,18 @@ status crud_request_handler::create(
     fs_->upload_file(p, request.body());
 
     response.result(http::status::ok);
-    response.set(http::field::content_type, "text/plain");
+    response.set(http::field::content_type, "application/json");
     std::string data_string = "{ \"id\": " + std::to_string(next_id) + " }";
     auto buf = new char[data_string.size()];
     memcpy(buf, data_string.c_str(), data_string.size());
     response.body().data = buf;
     response.body().size = data_string.size();
+    Logger::logInfo("crud_request_handler - serve - success");
     return {true, ""};
 }
 
+
+// Reads data and returns to user
 status crud_request_handler::retrieve(
     const boost::filesystem::path& path,
     http::response<http::buffer_body>& response
@@ -129,16 +137,27 @@ status crud_request_handler::retrieve(
         file.open(PAGE_404_PATH);
     }
 
-    file.seekg(0, file.end);
-    length = file.tellg();
-    file.seekg(0, file.beg);
-    buffer = new char[length];
-    file.read(buffer, length);
-    file.close();
+    try {
+        file.seekg(0, file.end);
+        length = file.tellg();
+        file.seekg(0, file.beg);
+        buffer = new char[length];
+        file.read(buffer, length);
+        file.close();
 
-    response.set(http::field::content_type, "text/plain");
-    response.body().data = buffer;
-    response.body().size = length;
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "application/json");
+        response.body().data = buffer;
+        response.body().size = length;
+        Logger::logInfo("crud_request_handler - serve - success");
+    }
+    catch (std::exception &e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+        std::stringstream msg_stream;
+        msg_stream << "Exception: " << e.what();
+        std::string msg = msg_stream.str();
+        Logger::logError(msg);
+    }
 
     if (default_404) {
         response.result(http::status::not_found);
@@ -266,11 +285,59 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
 
 }
 
+// Returns the list of file names under path in the response.
 status crud_request_handler::list(
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request, 
     http::response<http::buffer_body>& response
 ) const {
-    // TODO: helper private function to list all instances of an entity
-    return {true, ""};
+    if(fs_->is_directory(path)) {
+        try {
+            std::stringstream filename_stream;
+            filename_stream << "[";
+            const char* sep = "";
+            
+            for (fs::directory_iterator itr(path); itr!=fs::directory_iterator(); ++itr)
+            {
+                filename_stream << sep << itr->path().filename().string();
+                sep = ", ";
+            }
+            filename_stream << "]";
+
+            std::string s = filename_stream.str();
+            auto buf = new char[s.size()];
+            memcpy(buf, s.c_str(), s.size());
+            response.body().data = buf;
+            response.body().size = s.size();
+            Logger::logInfo("crud_request_handler - serve - success");
+        }
+        catch (std::exception &e) {
+            std::cerr << "Exception: " << e.what() << "\n";
+            std::stringstream msg_stream;
+            msg_stream << "Exception: " << e.what();
+            std::string msg = msg_stream.str();
+            Logger::logError(msg);
+        }
+    }
+    else {
+        const std::string PAGE_404_PATH = "../static/404_error.html";
+        Logger::logError("404 file not found. Serving error page instead.");
+        std::ifstream file;
+        file.open(PAGE_404_PATH);
+        int length = 0;
+        char* buffer;
+        file.seekg(0, file.end);
+        length = file.tellg();
+        file.seekg(0, file.beg);
+        buffer = new char[length];
+        file.read(buffer, length);
+        file.close();
+
+        response.result(http::status::not_found);
+        response.set(http::field::content_type, "text/html");
+        response.body().data = buffer;
+        response.body().size = length;
+        Logger::logError("crud_request_handler - serve - failed");
+    }
+    return {false, "Directory not exist"};
 }
