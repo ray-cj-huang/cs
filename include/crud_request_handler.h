@@ -25,24 +25,24 @@ class crud_request_handler: public request_handler
             const http::request<http::string_body>& request,
             http::response<http::buffer_body>& response
         ) const;
-        http::status retrieve(
+        status retrieve(
             const boost::filesystem::path& path,
-            http::response<http::dynamic_body>& response
+            http::response<http::buffer_body>& response
         ) const;
-        http::status update(
+        status update(
             const boost::filesystem::path& path, 
             const http::request<http::string_body>& request, 
-            http::response<http::dynamic_body>& response
+            http::response<http::buffer_body>& response
         ) const;
-        http::status remove( // keyword 'delete' cannot be customized
+        status remove( // keyword 'delete' cannot be customized
             const boost::filesystem::path& path, 
             const http::request<http::string_body>& request, 
-            http::response<http::dynamic_body>& response
+            http::response<http::buffer_body>& response
         ) const;
-        http::status list(
+        status list(
             const boost::filesystem::path& path, 
             const http::request<http::string_body>& request, 
-            http::response<http::dynamic_body>& response
+            http::response<http::buffer_body>& response
         ) const;
         int get_next_id(const boost::filesystem::path& path) const;
 

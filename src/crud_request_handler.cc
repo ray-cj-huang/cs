@@ -1,7 +1,7 @@
 #include "crud_request_handler.h"
 #include "file_system_base.h"
 #include "logger.h"
-
+#include <fstream>
 namespace beast = boost::beast;
 namespace http = beast::http;
 
@@ -59,13 +59,19 @@ status crud_request_handler::serve(char* req_data, size_t bytes_transferred, htt
 
     auto verb = req_parser.get().method();
 
+    std::string full_path(req_parser.get().target());
+    std::string rel_path = full_path.substr(full_path.find(location_) + location_.length());
+    std::string path = path_cat(root_, rel_path);
     if (verb == http::verb::post) {
-        std::string full_path(req_parser.get().target());
-        std::string rel_path = full_path.substr(full_path.find(location_) + location_.length());
-        std::string path = path_cat(root_, rel_path);
         return create(path, req_parser.get(), res);
     }
-    return {true, ""};
+    else if (verb == http::verb::get) {
+        if (isdigit(path.at(path.length() - 1))) {
+            return retrieve(path, res);
+        }
+        return list(path, req_parser.get(), res);
+    }
+    return {false, ""};
 }
 
 status crud_request_handler::create(
@@ -101,37 +107,65 @@ status crud_request_handler::create(
     return {true, ""};
 }
 
-http::status crud_request_handler::retrieve(
+status crud_request_handler::retrieve(
     const boost::filesystem::path& path,
-    http::response<http::dynamic_body>& response
+    http::response<http::buffer_body>& response
 ) const {
-    // TODO: helper private function to retrieve instance content
-    return http::status::ok;
+    const std::string PAGE_404_PATH = "../static/404_error.html";
+    bool default_404 = false;
+    std::ifstream file(path.string());
+    int length = 0;
+    char* buffer;
+    if (!file.is_open()) {
+        default_404 = true;
+        Logger::logError("404 file not found. Serving error page instead.");
+        file.open(PAGE_404_PATH);
+    }
+
+    file.seekg(0, file.end);
+    length = file.tellg();
+    file.seekg(0, file.beg);
+    buffer = new char[length];
+    file.read(buffer, length);
+    file.close();
+
+    response.set(http::field::content_type, "text/plain");
+    response.body().data = buffer;
+    response.body().size = length;
+
+    if (default_404) {
+        response.result(http::status::not_found);
+        std::string message = "404 Error Page";
+        response.set(http::field::content_type, "text/html");
+        return {false, message};
+    }
+
+    return {true, ""};
 }
 
-http::status crud_request_handler::update(
+status crud_request_handler::update(
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request, 
-    http::response<http::dynamic_body>& response
+    http::response<http::buffer_body>& response
 ) const {
     // TODO: helper private function to update existing instance content according to request body
-    return http::status::ok;
+    return {true, ""};
 }
 
-http::status crud_request_handler::remove( // keyword 'delete' cannot be customized
+status crud_request_handler::remove( // keyword 'delete' cannot be customized
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request, 
-    http::response<http::dynamic_body>& response
+    http::response<http::buffer_body>& response
 ) const {
     // TODO: helper private function to delete instance
-    return http::status::ok;
+    return {true, ""};
 }
 
-http::status crud_request_handler::list(
+status crud_request_handler::list(
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request, 
-    http::response<http::dynamic_body>& response
+    http::response<http::buffer_body>& response
 ) const {
     // TODO: helper private function to list all instances of an entity
-    return http::status::ok;
+    return {true, ""};
 }
