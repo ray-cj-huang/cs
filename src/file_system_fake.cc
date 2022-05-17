@@ -197,8 +197,40 @@ bool FakeFileSystem::upload_file( const fs::path& path, const std::string& body 
     return true;
 }
 
-std::shared_ptr<FakeEntry> FakeFileSystem::get_entry( const fs::path& path ) {
-    std::shared_ptr<FakeEntry> entry_wanted(nullptr);
+bool FakeFileSystem::read( const boost::filesystem::path& path, std::string& data ) const {
+    data = "";
+    FakeEntry* entry = get_entry(path);
+    if (!entry || entry->type_ != FakeEntry::ENTRY_TYPE_FILE) {
+        return false;
+    }
+    data = ((FakeFile*)entry)->file_content_;
+    return true;
+}
+
+bool FakeFileSystem::list_directory( const boost::filesystem::path& path, std::string& list_str ) const {
+    list_str = "";
+    if (!is_directory(path)) {
+        return false;
+    }
+    std::cerr << "0" << std::endl;
+    FakeDirectory* curr_dir = (FakeDirectory*)get_entry(path);
+    mutex_fs_.lock();  /**** atomic start ****/
+    for (auto entry : curr_dir->child_entries_) {
+        std::cerr << "1" << std::endl;
+        list_str += entry->name_;
+        std::cerr << "2" << std::endl;
+        list_str += ", ";
+    }
+    mutex_fs_.unlock();  /**** atomic end ****/
+    if (list_str != "") {
+        list_str = list_str.substr(0, list_str.size()-2);
+    }
+    list_str = "[" + list_str + "]";
+    return true;
+}
+
+FakeEntry* FakeFileSystem::get_entry( const fs::path& path ) const {
+    FakeEntry* entry_wanted = nullptr;
     fs::path curr_path = path.lexically_normal();
     if (curr_path.filename() == ".") {
         // if directory, get the directory name instead of "."
@@ -208,12 +240,12 @@ std::shared_ptr<FakeEntry> FakeFileSystem::get_entry( const fs::path& path ) {
     FakeDirectory* directory = root_.get();
     switch (traverse(directory, curr_path)) {
         case FakeEntry::ENTRY_TYPE_DIR:
-            entry_wanted.reset(directory);
+            entry_wanted = (FakeEntry*) directory;
             break;
         case FakeEntry::ENTRY_TYPE_FILE:
             for (auto entry : directory->child_entries_) {
                 if (entry->name_ == path.filename().string()) {
-                    entry_wanted = entry;
+                    entry_wanted = entry.get();
                     break;
                 }
             }

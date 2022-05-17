@@ -139,3 +139,115 @@ TEST_F(RequestHandlerTest, crudServeCreate) {
     std::string res_body_expected = "{ \"id\": 1 }";
     EXPECT_EQ(res_body, res_body_expected);
 }
+
+TEST_F(RequestHandlerTest, crudServeDelete) {
+    char buf_post[] = "POST /crud/Shoe HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf_post);
+    testCRUDHandler(buf_post, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_del[] = "DELETE /crud/Shoe/1 HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_del);
+    testCRUDHandler(buf_del, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "File: /crud_root/Shoe/1 deleted";
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+TEST_F(RequestHandlerTest, crudServeDeleteUnknownID) {
+    char buf_post[] = "POST /crud/Shoe HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf_post);
+    testCRUDHandler(buf_post, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_del[] = "DELETE /crud/Shoe/2 HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_del);
+    testCRUDHandler(buf_del, size);
+    EXPECT_EQ(res.result(), http::status::bad_request);
+}
+
+TEST_F(RequestHandlerTest, crudServeDeleteUnknownEntity) {
+    char buf_post[] = "POST /crud/Shoe HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf_post);
+    testCRUDHandler(buf_post, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_del[] = "DELETE /crud/Clothes/1 HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_del);
+    testCRUDHandler(buf_del, size);
+    EXPECT_EQ(res.result(), http::status::bad_request);
+}
+
+TEST_F(RequestHandlerTest, crudServeRetrieve) {
+    char buf_post_1[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello one";
+    size_t size = std::strlen(buf_post_1);
+    testCRUDHandler(buf_post_1, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_post_2[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello two";
+    size = std::strlen(buf_post_2);
+    testCRUDHandler(buf_post_2, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_retrieve[] = "GET /crud/Shoe/1 HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_retrieve);
+    testCRUDHandler(buf_retrieve, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "Hello one";
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+TEST_F(RequestHandlerTest, crudServeUpdate) {
+    char buf_post[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 11\r\n\r\n{ hi: foo }";
+    size_t size = std::strlen(buf_post);
+    testCRUDHandler(buf_post, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_put[] = "PUT /crud/Shoe/1 HTTP/1.1\r\nContent-Length: 12\r\n\r\n{ lo: barr }";
+    size = std::strlen(buf_put);
+    testCRUDHandler(buf_put, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "File: /crud_root/Shoe/1 updated";
+    EXPECT_EQ(res_body, res_body_expected);
+
+    EXPECT_EQ(((FakeFile*)((FakeFileSystem*)fs)->get_entry("/crud_root/Shoe/1"))->file_content_, "{ lo: barr }");
+}
+
+TEST_F(RequestHandlerTest, crudServeList) {
+    char buf_post_1[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello one";
+    size_t size = std::strlen(buf_post_1);
+    testCRUDHandler(buf_post_1, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_post_2[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello two";
+    size = std::strlen(buf_post_2);
+    testCRUDHandler(buf_post_2, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    char buf_list[] = "GET /crud/Shoe HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_list);
+    testCRUDHandler(buf_list, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "[1, 2]";
+    EXPECT_EQ(res_body, res_body_expected);
+}

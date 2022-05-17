@@ -48,16 +48,55 @@ bool RealFileSystem::create_directories( const fs::path& path ) {
 }
 
 bool RealFileSystem::upload_file( const fs::path& path, const std::string& body ) {
-    std::string path_str = path.lexically_normal().generic_string();
+    std::string path_str = path.lexically_normal().string();
     std::fstream fstr;
     mutex_fs_.lock();  /**** atomic start ****/
     fstr.open(path_str.c_str(), std::fstream::out);
     if (!fstr.is_open()) {
+        mutex_fs_.unlock();  /**** atomic end ****/
         return false;
     }
     fstr << body;
     fstr.close();
     mutex_fs_.unlock();  /**** atomic end ****/
+    return true;
+}
+
+bool RealFileSystem::read( const boost::filesystem::path& path, std::string& data ) const {
+    std::string path_str = path.lexically_normal().string();
+    std::fstream fstr;
+    mutex_fs_.lock();  /**** atomic start ****/
+    fstr.open(path_str.c_str(), std::fstream::in);
+    if (!fstr.is_open()) {
+        mutex_fs_.unlock();  /**** atomic end ****/
+        return false;
+    }
+    data = "";
+    std::string line;
+    while (std::getline(fstr, line)) {
+        data += line;
+        data += '\n';
+    }
+    fstr.close();
+    mutex_fs_.unlock();  /**** atomic end ****/
+    return true;
+}
+
+bool RealFileSystem::list_directory( const boost::filesystem::path& path, std::string& list_str ) const {  
+    list_str = ""; 
+    if (!is_directory(path)) {
+        return false;
+    }
+    mutex_fs_.lock();  /**** atomic start ****/
+    for (fs::directory_iterator it(path); it!=fs::directory_iterator(); it++) {
+        list_str += it->path().filename().string();
+        list_str += ", ";
+    }
+    mutex_fs_.unlock();  /**** atomic end ****/
+    if (list_str != "") {
+        list_str = list_str.substr(0, list_str.size()-2);
+    }
+    list_str = "[" + list_str + "]";
     return true;
 }
 

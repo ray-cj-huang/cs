@@ -56,5 +56,13 @@ TEST_F(FakeFileSystemTest, DeleteUnknownFile) {
 TEST_F(FakeFileSystemTest, UpdateExistingFile) {
     EXPECT_TRUE(ffs_.upload_file("/usr/src/1", "Hello 1"));
     EXPECT_TRUE(ffs_.upload_file("/usr/src/1", "Hello one"));
-    EXPECT_EQ(((FakeFile*)ffs_.get_entry("/usr/src/1").get())->file_content_, "Hello one");
+    EXPECT_EQ(((FakeFile*)ffs_.get_entry("/usr/src/1"))->file_content_, "Hello one");
+}
+
+TEST_F(FakeFileSystemTest, ListDirectory) {
+    EXPECT_TRUE(ffs_.upload_file("/usr/src/1", "Hello 1"));
+    EXPECT_TRUE(ffs_.upload_file("/usr/src/2", "Hello one"));
+    std::string list_str;
+    EXPECT_TRUE(ffs_.list_directory("/usr/src", list_str));
+    EXPECT_EQ(list_str, "[1, 2]");
 }

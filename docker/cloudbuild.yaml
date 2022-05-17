@@ -30,3 +30,5 @@ steps:
     '.'
   ]
 images: ['gcr.io/$PROJECT_ID/pushin-p:base', 'gcr.io/$PROJECT_ID/pushin-p:latest']
+
+timeout: 1200s

@@ -1,9 +1,6 @@
 #include "crud_request_handler.h"
 #include "file_system_base.h"
 #include "logger.h"
-#include <fstream>
-#include <filesystem>
-#include <boost/filesystem.hpp>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -128,45 +125,31 @@ status crud_request_handler::retrieve(
 ) const {
     const std::string PAGE_404_PATH = "../static/404_error.html";
     bool default_404 = false;
-    std::ifstream file(path.string());
-    int length = 0;
-    char* buffer;
-    if (!file.is_open()) {
+    std::string message = "";
+    
+    std::string data;
+    if (!fs_->read(path, data)) {
         default_404 = true;
-        Logger::logError("404 file not found. Serving error page instead.");
-        file.open(PAGE_404_PATH);
-    }
-
-    try {
-        file.seekg(0, file.end);
-        length = file.tellg();
-        file.seekg(0, file.beg);
-        buffer = new char[length];
-        file.read(buffer, length);
-        file.close();
-
+        Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
+        if (!fs_->read(PAGE_404_PATH, data)) {
+            data = "404 Not Found";
+        }
+        response.result(http::status::not_found);
+        response.set(http::field::content_type, "text/html");
+        message = "404 Error Page";
+    } else {
         response.result(http::status::ok);
         response.set(http::field::content_type, "application/json");
-        response.body().data = buffer;
-        response.body().size = length;
         Logger::logInfo("crud_request_handler - serve - success");
     }
-    catch (std::exception &e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-        std::stringstream msg_stream;
-        msg_stream << "Exception: " << e.what();
-        std::string msg = msg_stream.str();
-        Logger::logError(msg);
-    }
 
-    if (default_404) {
-        response.result(http::status::not_found);
-        std::string message = "404 Error Page";
-        response.set(http::field::content_type, "text/html");
-        return {false, message};
-    }
+    char* buffer;
+    buffer = new char[data.size()];
+    memcpy(buffer, data.c_str(), data.size());
+    response.body().data = buffer;
+    response.body().size = data.size();
+    return {!default_404, message};
 
-    return {true, ""};
 }
 
 status crud_request_handler::update(
@@ -291,53 +274,30 @@ status crud_request_handler::list(
     const http::request<http::string_body>& request, 
     http::response<http::buffer_body>& response
 ) const {
-    if(fs_->is_directory(path)) {
-        try {
-            std::stringstream filename_stream;
-            filename_stream << "[";
-            const char* sep = "";
-            
-            for (fs::directory_iterator itr(path); itr!=fs::directory_iterator(); ++itr)
-            {
-                filename_stream << sep << itr->path().filename().string();
-                sep = ", ";
-            }
-            filename_stream << "]";
+    const std::string PAGE_404_PATH = "../static/404_error.html";
+    bool default_404 = false;
+    std::string message = "";
 
-            std::string s = filename_stream.str();
-            auto buf = new char[s.size()];
-            memcpy(buf, s.c_str(), s.size());
-            response.body().data = buf;
-            response.body().size = s.size();
-            Logger::logInfo("crud_request_handler - serve - success");
+    std::string data;
+    if (!fs_->list_directory(path, data)) {
+        default_404 = true;
+        Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
+        if (!fs_->read(PAGE_404_PATH, data)) {
+            data = "404 Not Found";
         }
-        catch (std::exception &e) {
-            std::cerr << "Exception: " << e.what() << "\n";
-            std::stringstream msg_stream;
-            msg_stream << "Exception: " << e.what();
-            std::string msg = msg_stream.str();
-            Logger::logError(msg);
-        }
-    }
-    else {
-        const std::string PAGE_404_PATH = "../static/404_error.html";
-        Logger::logError("404 file not found. Serving error page instead.");
-        std::ifstream file;
-        file.open(PAGE_404_PATH);
-        int length = 0;
-        char* buffer;
-        file.seekg(0, file.end);
-        length = file.tellg();
-        file.seekg(0, file.beg);
-        buffer = new char[length];
-        file.read(buffer, length);
-        file.close();
-
         response.result(http::status::not_found);
         response.set(http::field::content_type, "text/html");
-        response.body().data = buffer;
-        response.body().size = length;
-        Logger::logError("crud_request_handler - serve - failed");
+        message = "404 Error Page";
+    } else {
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "application/json");
+        Logger::logInfo("crud_request_handler - serve - success");
     }
-    return {false, "Directory not exist"};
+
+    char* buffer;
+    buffer = new char[data.size()];
+    memcpy(buffer, data.c_str(), data.size());
+    response.body().data = buffer;
+    response.body().size = data.size();
+    return {!default_404, message};
 }

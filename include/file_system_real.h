@@ -13,6 +13,8 @@ class RealFileSystem: public FileSystem {
         bool is_empty( const boost::filesystem::path& path ) const override;
         bool create_directories( const boost::filesystem::path& path ) override;
         bool upload_file( const boost::filesystem::path& path, const std::string& body) override;
+        bool read( const boost::filesystem::path& path, std::string& data ) const override;
+        bool list_directory( const boost::filesystem::path& path, std::string& list_str ) const override;
 
         // thread-unsafe
         boost::filesystem::path current_path() const override;
