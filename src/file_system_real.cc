@@ -7,7 +7,7 @@ namespace fs = boost::filesystem;
 
 RealFileSystem::RealFileSystem(std::mutex& mutex_fs): FileSystem(mutex_fs) {}
 
-bool RealFileSystem::exists( const fs::path& path ) {
+bool RealFileSystem::exists( const fs::path& path ) const {
     bool flag;
     mutex_fs_.lock();  /**** atomic start ****/
     flag = fs::exists(path);
@@ -15,7 +15,7 @@ bool RealFileSystem::exists( const fs::path& path ) {
     return flag;
 }
 
-bool RealFileSystem::is_directory( const fs::path& path ) {
+bool RealFileSystem::is_directory( const fs::path& path ) const {
     bool flag;
     mutex_fs_.lock();  /**** atomic start ****/
     flag = fs::is_directory(path);
@@ -31,7 +31,7 @@ bool RealFileSystem::remove( const fs::path& path ) {
     return flag;
 }
 
-bool RealFileSystem::is_empty( const fs::path& path ) {
+bool RealFileSystem::is_empty( const fs::path& path ) const {
     bool flag;
     mutex_fs_.lock();  /**** atomic start ****/
     flag = fs::is_empty(path);
@@ -59,4 +59,12 @@ bool RealFileSystem::upload_file( const fs::path& path, const std::string& body 
     fstr.close();
     mutex_fs_.unlock();  /**** atomic end ****/
     return true;
+}
+
+fs::path RealFileSystem::current_path() const {
+    return fs::current_path();
+}
+
+void RealFileSystem::current_path(const fs::path& path, boost::system::error_code& ec) {
+    fs::current_path(path, ec);
 }

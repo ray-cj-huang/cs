@@ -48,21 +48,26 @@ class FakeFile: public FakeEntry {
 
 class FakeFileSystem: public FileSystem {
     public:
-        FakeFileSystem(std::mutex& mutex_fs);
+        FakeFileSystem(std::mutex& mutex_fs, boost::filesystem::path pwd = boost::filesystem::path("/"));
 
-        bool exists( const boost::filesystem::path& path ) override;
-        bool is_directory( const boost::filesystem::path& path ) override;
+        bool exists( const boost::filesystem::path& path ) const override;
+        bool is_directory( const boost::filesystem::path& path ) const override;
         bool remove( const boost::filesystem::path& path ) override;
-        bool is_empty( const boost::filesystem::path& path ) override;
+        bool is_empty( const boost::filesystem::path& path ) const override;
         bool create_directories( const boost::filesystem::path& path ) override;
         bool upload_file( const boost::filesystem::path& path, const std::string& body) override;
 
         std::shared_ptr<FakeEntry> get_entry( const boost::filesystem::path& path );
 
-        std::string ToString() const { return root_->ToString(); };
+        // thread_unsafe:
+        FakeEntry::EntryType traverse(FakeDirectory* &directory, boost::filesystem::path& path, bool if_curr_dir = true) const;
+        boost::filesystem::path current_path() const override;
+        void current_path(const boost::filesystem::path& path, boost::system::error_code& ec) override;
+        std::string ToString() const { return root_->name_ + "\n" + root_->ToString(); };
     
     private:
         std::shared_ptr<FakeDirectory> root_;
+        boost::filesystem::path pwd_; // indicating the working directory
 };
 
 #endif

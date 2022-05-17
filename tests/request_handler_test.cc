@@ -5,17 +5,25 @@
 
 #include "gtest/gtest.h"
 #include "request_handler.h"
+#include "crud_request_handler.h"
 #include "error_request_handler.h"
 #include "static_request_handler.h"
 #include "echo_request_handler.h"
 
+#include "file_system_fake.h"
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 
+std::mutex mutex_ffs;
+
 class RequestHandlerTest : public ::testing::Test {
   protected:
-    
+    void SetUp() override {
+        fs = new FakeFileSystem(mutex_ffs, "/crud_root");
+    }
     http::response<http::buffer_body> res;
+    FileSystem* fs;
 
     void testErrorHandler(char* buf, size_t size) {
         error_request_handler err_rh = error_request_handler("/echo", "/echo");
@@ -31,6 +39,12 @@ class RequestHandlerTest : public ::testing::Test {
         static_request_handler srh = static_request_handler("/static", 
             "/static/foo", "../tests/static_files");
         srh.serve(buf, size, res);
+    }
+
+    void testCRUDHandler(char* buf, size_t size) {
+        crud_request_handler crh = crud_request_handler("/crud", 
+            "/whatever/since/this/is/never/used", "/crud_root", fs);
+        crh.serve(buf, size, res);
     }
 };
 
@@ -108,4 +122,20 @@ TEST_F(RequestHandlerTest, staticServeFileNotExist) {
     testStaticHandler(buf, size);
     EXPECT_EQ(res.result(), http::status::not_found);
     EXPECT_EQ(res.base()[http::field::content_type], "text/html");
+}
+
+/**** CRUD Handler Unit Tests ****/
+
+TEST_F(RequestHandlerTest, crudServeCreate) {
+    char buf[] = "POST /crud/Shoe HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf);
+    testCRUDHandler(buf, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "{ \"id\": 1 }";
+    EXPECT_EQ(res_body, res_body_expected);
 }

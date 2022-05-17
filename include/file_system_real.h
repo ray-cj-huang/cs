@@ -7,12 +7,17 @@ class RealFileSystem: public FileSystem {
     public:
         RealFileSystem(std::mutex& mutex_fs);
 
-        bool exists( const boost::filesystem::path& path ) override;
-        bool is_directory( const boost::filesystem::path& path ) override;
+        bool exists( const boost::filesystem::path& path ) const override;
+        bool is_directory( const boost::filesystem::path& path ) const override;
         bool remove( const boost::filesystem::path& path ) override;
-        bool is_empty( const boost::filesystem::path& path ) override;
+        bool is_empty( const boost::filesystem::path& path ) const override;
         bool create_directories( const boost::filesystem::path& path ) override;
         bool upload_file( const boost::filesystem::path& path, const std::string& body) override;
+
+        // thread-unsafe
+        boost::filesystem::path current_path() const override;
+        void current_path(const boost::filesystem::path& path, boost::system::error_code& ec) override;
+
 };
 
 #endif
