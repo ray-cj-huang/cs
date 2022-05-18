@@ -13,7 +13,13 @@ pushin-p
 ├── configs/
 ├── docker/
 ├── include/
+    ├── factories/
+    ├── file_system/
+    └── request_handlers/
 ├── src/
+    ├── factories/
+    ├── file_system/
+    └── request_handlers/
 ├── static/
 └── tests/
     ├── integration_tests/
@@ -32,8 +38,10 @@ The docker/ directory contains various config files used to generate Docker cont
 our project. There is currently a container for our webserver and for our coverage test.
 
 The include/ directory contains header files for various classes and interfaces used in our
-webserver. These header files are implemented in the src/ directory. This includes server, 
-session, config parser, request handler, factory, and logger classes. 
+webserver. For organizational purposes, there are subdirectories for the factories,
+filesystem, and request handlers. These header files are implemented in the src/ directory.
+This includes server, session, config parser, and logger classes, as well as the factories,
+filesystem, and request handlers in the corresponding subdirectories.
 
 Our top level class is server_main.cc. It takes a webserver config file as an argument and
 uses the config_parser class to extract the relevant information. This info is used to
