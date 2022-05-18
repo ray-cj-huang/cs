@@ -24,6 +24,7 @@
 #include "echo_request_handler_factory.h"
 #include "static_request_handler_factory.h"
 #include "crud_request_handler_factory.h"
+#include "health_request_handler_factory.h"
 #include "logger.h"
 
 #include "file_system_real.h"
@@ -51,13 +52,18 @@ int main(int argc, char* argv[]) {
     }
 
     // find the endpoints for handling requests
-    config.GetPaths(config.static_paths_, config.echo_paths_, config.CRUD_paths_);
+    config.GetPaths(
+        config.static_paths_,
+        config.echo_paths_,
+        config.CRUD_paths_,
+        config.health_paths_
+    );
 
     std::unordered_map<std::string, request_handler_factory*> routes;
     // inserting 404 handler first ensures that its path won't be overwritten
     routes.insert({{"/", new error_request_handler_factory()}});
 
-    std::string echo_paths = "", static_paths = "", CRUD_paths = "";
+    std::string echo_paths = "", static_paths = "", CRUD_paths = "", health_paths = "";
     for (const auto& elem: config.echo_paths_) // search for all echo handlers specified in config
     {
         echo_paths += "\"" + elem + "\", ";
@@ -79,6 +85,12 @@ int main(int argc, char* argv[]) {
         routes.insert({{elem.first, new crud_request_handler_factory(elem.second, fs)}});
     }
 
+    for (const auto& elem: config.health_paths_) // search for all echo handlers specified in config
+    {
+        health_paths += "\"" + elem + "\", ";
+        routes.insert({{elem, new health_request_handler_factory()}});
+    }
+
     boost::asio::io_service io_service;
 
     server s(io_service, static_cast<short>(portNum), routes);
@@ -87,6 +99,7 @@ int main(int argc, char* argv[]) {
     Logger::logInfo("Echo Paths: " + echo_paths);
     Logger::logInfo("Static Paths: " + static_paths);
     Logger::logInfo("CRUD Paths: " + CRUD_paths);
+    Logger::logInfo("Health Paths: " + health_paths);
     io_service.run();
   }
   catch (std::exception& e)

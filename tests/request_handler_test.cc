@@ -9,6 +9,7 @@
 #include "error_request_handler.h"
 #include "static_request_handler.h"
 #include "echo_request_handler.h"
+#include "health_request_handler.h"
 
 #include "file_system_fake.h"
 
@@ -45,6 +46,11 @@ class RequestHandlerTest : public ::testing::Test {
         crud_request_handler crh = crud_request_handler("/crud", 
             "/whatever/since/this/is/never/used", "/crud_root", fs);
         crh.serve(buf, size, res);
+    }
+
+    void testHealthHandler(char* buf, size_t size) {
+        health_request_handler hrh = health_request_handler("/health", "/health");
+        hrh.serve(buf, size, res);
     }
 };
 
@@ -249,5 +255,19 @@ TEST_F(RequestHandlerTest, crudServeList) {
         res_body += ((char*)res.body().data)[i];
     }
     std::string res_body_expected = "[1, 2]";
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+TEST_F(RequestHandlerTest, healthServe) {
+    char buf[] = "GET /health HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf);
+    testHealthHandler(buf, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+    EXPECT_EQ(res.base()[http::field::content_type], "text/plain");
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "OK";
     EXPECT_EQ(res_body, res_body_expected);
 }
