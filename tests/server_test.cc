@@ -9,8 +9,8 @@ static const int TEST_PORT = 8000;
 class ServerTest : public ::testing::Test {
   protected:
     boost::asio::io_service io_service_;
-    server server_ = server(io_service_, static_cast<short>(TEST_PORT), {});
-    
+    server server_ = server(io_service_, static_cast<short>(TEST_PORT), {}, 1);
+
     // exposes handle_accept() method and returns HandleAcceptFlag to verify execution
     server::HandleAcceptFlag testHandleAccept(const boost::system::error_code& error) {
       // allocate on heap in case we delete the session (in case of error)

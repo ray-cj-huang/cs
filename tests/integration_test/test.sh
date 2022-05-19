@@ -1,7 +1,9 @@
 #!/bin/bash
 
 EXPECTED_RESPONSE_PATH="../tests/integration_test"
-STATC_FILES_PATH="../static"
+STATIC_FILES_PATH="../static"
+
+rm example_config_test
 
 echo "
 foo "bar";
@@ -35,8 +37,12 @@ pid_server=$!
 
 sleep 1
 
+rm example_config_test
+
 # Test 1 - Valid Echo Request
 printf "Test 1 - Valid Echo Request\n"
+
+rm test_response1
 
 (printf '%s\r\n%s\r\n%s\r\n\r\n' \
     "GET /echo HTTP/1.1"                        \
@@ -45,6 +51,8 @@ printf "Test 1 - Valid Echo Request\n"
     | nc localhost 9080) > test_response1
 
 DIFF=$(diff ${EXPECTED_RESPONSE_PATH}/test1_expected test_response1)
+
+rm test_response1
 
 if [ "$DIFF" == "" ]; then
     echo "Test 1: Success";  
@@ -55,6 +63,8 @@ else
 fi
 
 # Test 2 - Invalid Request: Insufficient Request Headers (Missing Port Num):
+rm test_response2
+
 test_response=$(printf '%s\r\n%s\r\n%s\r\n\r\n'  \
     "GET HTTP/1.1"                          \
     "Host: www.example.com"                 \
@@ -64,6 +74,8 @@ test_response=$(printf '%s\r\n%s\r\n%s\r\n\r\n'  \
 echo $test_response > test_response2
 
 DIFF=$(diff ${EXPECTED_RESPONSE_PATH}/test2_expected test_response2)
+
+rm test_response2
 
 if [ "$DIFF" == "" ]; then
     echo "Test 2: Success";  
@@ -76,9 +88,13 @@ fi
 # Test 3 - Valid Static Request
 printf "Test 3 - Valid Static Request\n"
 
+rm test_response3
+
 curl http://localhost:9080/static/lorem-ipsum.txt > test_response3
 
-DIFF=$(diff ${STATC_FILES_PATH}/lorem-ipsum.txt test_response3)
+DIFF=$(diff ${STATIC_FILES_PATH}/lorem-ipsum.txt test_response3)
+
+rm test_response3
 
 if [ "$DIFF" == "" ]; then
     echo "Test 3: Success";  
@@ -88,6 +104,28 @@ else
     exit 1;
 fi
 
+# Test 4 - Multithreaded Requests
+printf "Test 4 - Valid Multithreaded Requests\n"
+
+OUT=$((curl -s http://localhost:80/sleep > /dev/null) & time -p (curl -s http://localhost:80/ > /dev/null) 2>&1)
+
+time_regex="real ([0-9]+\.[0-9]+)"
+
+time_limit="5.00"
+
+if [[ $OUT =~ $time_regex ]]
+then
+    TIME="${BASH_REMATCH[1]}"
+    echo "Request took $TIME seconds"
+    if [[ $(echo "$TIME $time_limit" | awk '{print ($1 < $2)}') == 1 ]]
+    then      
+        echo "Test 4: Success";  
+    else
+        echo "Test 4: Failed, request response time exceeded time limit of $time_limit"; 
+        kill -9 $pid_server
+        exit 1;
+    fi
+fi
 
 # Acknowledgement: reference code: 
 # https://code.cs130.org/plugins/gitiles/buugle/+/8b8b0ff3ed34b7401f2235df8e5c3cfb7196b8a4/tests/integration_test.sh
@@ -219,5 +257,6 @@ rm -rf crud
 rm crud_test_sample_result
 rm crud_test_actual_result
 
+printf "All tests succeeded!"
 kill -9 $pid_server
 exit 0

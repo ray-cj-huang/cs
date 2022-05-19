@@ -1,5 +1,7 @@
 #include <chrono>
-#include <thread>
+#include <boost/thread/thread.hpp> 
+#include <boost/lexical_cast.hpp>
+
 #include "sleep_request_handler.h"
 #include "logger.h"
 
@@ -13,10 +15,12 @@ status sleep_request_handler::serve(char* req_data, size_t bytes_transferred, ht
     res.result(http::status::ok);
     res.set(http::field::content_type, "text/plain");
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_request_handler::SLEEP_DURATION));
-    std::thread::id tid = std::this_thread::get_id();
+    std::string tid = boost::lexical_cast<std::string>(boost::this_thread::get_id());
+    Logger::logInfo("sleep_request_handler - beginning thread #"+tid+" sleep.");
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(sleep_request_handler::SLEEP_DURATION));
+    Logger::logInfo("sleep_request_handler - finished thread #"+tid+" sleep.");
+
     std::string data_string = "Thread slept for "+std::to_string(sleep_request_handler::SLEEP_DURATION/1000)+" seconds.";
-    
     auto buf = new char[data_string.size()];
     memcpy(buf, data_string.c_str(), data_string.size());
     res.body().data = buf;

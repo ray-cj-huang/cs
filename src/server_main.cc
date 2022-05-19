@@ -100,14 +100,16 @@ int main(int argc, char* argv[]) {
 
     boost::asio::io_service io_service;
 
-    server s(io_service, static_cast<short>(portNum), routes);
+    const size_t THREAD_POOL_SIZE = 10;
+    server s(io_service, static_cast<short>(portNum), routes, THREAD_POOL_SIZE);
     Logger::logInfo("Server Initalized.");
     Logger::logInfo("Port: " + std::to_string(portNum));
     Logger::logInfo("Echo Paths: " + echo_paths);
     Logger::logInfo("Static Paths: " + static_paths);
     Logger::logInfo("CRUD Paths: " + CRUD_paths);
     Logger::logInfo("Health Paths: " + health_paths);
-    io_service.run();
+    Logger::logInfo("Sleep Paths: " + sleep_paths);
+    s.run();
   }
   catch (std::exception& e)
   {
