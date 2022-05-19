@@ -60,8 +60,18 @@ class RequestHandlerTest : public ::testing::Test {
     }
 };
 
-TEST_F(RequestHandlerTest, errorServeSucceeds) {
+TEST_F(RequestHandlerTest, error400ServeSucceeds) {
     char buf[] = "hi";
+    size_t size = std::strlen(buf);
+    testErrorHandler(buf, size);
+    EXPECT_EQ(res.result(), http::status::bad_request);
+    EXPECT_EQ(res.base()[http::field::content_type], "text/html");
+    EXPECT_NE(res.body().data, buf);
+    EXPECT_NE(res.body().size, size);
+}
+
+TEST_F(RequestHandlerTest, error404ServeSucceeds) {
+    char buf[] = "GET /static/doesnotexist.dne HTTP/1.1\r\n\r\n";
     size_t size = std::strlen(buf);
     testErrorHandler(buf, size);
     EXPECT_EQ(res.result(), http::status::not_found);

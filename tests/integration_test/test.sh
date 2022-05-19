@@ -33,6 +33,9 @@ server {
     root ./crud/;
   }
 
+  location /health HealthHandler {
+  }
+
 }" > example_config_test
 
 ./bin/server example_config_test &
@@ -107,8 +110,21 @@ else
     exit 1;
 fi
 
-# Test 4 - Multithreaded Requests
-printf "Test 4 - Valid Multithreaded Requests\n"
+# Test 4 - Health Request
+printf "Test 4 - Valid Health Request\n"
+
+OUT=$(curl http://localhost:9080/health)
+
+if [ $OUT == "OK" ]; then
+    echo "Test 4: Success";  
+else 
+    echo "Test 4: Failed"; 
+    kill -9 $pid_server
+    exit 1;
+fi
+
+# Test 5 - Multithreaded Requests
+printf "Test 5 - Valid Multithreaded Requests\n"
 
 OUT=$((curl -s http://localhost:9080/sleep > /dev/null) & time -p (curl -s http://localhost:9080/ > /dev/null) 2>&1)
 
@@ -128,6 +144,43 @@ then
         kill -9 $pid_server
         exit 1;
     fi
+fi
+
+# Test 6 - 400 Bad Request
+printf "Test 6 - 400 Bad Request\n"
+
+(echo 'hi' | nc localhost 9080) > test_response6
+
+DIFF=$(diff ${STATIC_FILES_PATH}/400_error.html test_response6)
+EXPECTED=$(cat ${EXPECTED_RESPONSE_PATH}/test6_expected)
+
+rm test_response6
+
+if [ "$DIFF" == "$EXPECTED" ]; then
+    echo "Test 6: Success";  
+else 
+    echo "diff $DIFF"
+    echo "expected $EXPECTED"
+    echo "Test 6: Failed"; 
+    kill -9 $pid_server
+    exit 1;
+fi
+
+# Test 7 - 404 File Not Found
+printf "Test 6 - 404 File Not Found\n"
+
+(curl http://localhost:9080/static/notexist.dne) > test_response7
+
+DIFF=$(diff ${STATIC_FILES_PATH}/404_error.html test_response7)
+
+rm test_response7
+
+if [ "$DIFF" == "" ]; then
+    echo "Test 7: Success";  
+else 
+    echo "Test 7: Failed"; 
+    kill -9 $pid_server
+    exit 1;
 fi
 
 # Acknowledgement: reference code: 
