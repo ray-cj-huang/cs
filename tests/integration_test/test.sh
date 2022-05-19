@@ -26,6 +26,9 @@ server {
   location /echo1 EchoHandler {
   }
 
+  location /sleep SleepHandler {
+  }
+
   location /api CRUDHandler {
     root ./crud/;
   }
@@ -107,7 +110,7 @@ fi
 # Test 4 - Multithreaded Requests
 printf "Test 4 - Valid Multithreaded Requests\n"
 
-OUT=$((curl -s http://localhost:80/sleep > /dev/null) & time -p (curl -s http://localhost:80/ > /dev/null) 2>&1)
+OUT=$((curl -s http://localhost:9080/sleep > /dev/null) & time -p (curl -s http://localhost:9080/ > /dev/null) 2>&1)
 
 time_regex="real ([0-9]+\.[0-9]+)"
 
