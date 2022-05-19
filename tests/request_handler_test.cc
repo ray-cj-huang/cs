@@ -10,6 +10,7 @@
 #include "static_request_handler.h"
 #include "echo_request_handler.h"
 #include "health_request_handler.h"
+#include "sleep_request_handler.h"
 
 #include "file_system_fake.h"
 
@@ -51,6 +52,11 @@ class RequestHandlerTest : public ::testing::Test {
     void testHealthHandler(char* buf, size_t size) {
         health_request_handler hrh = health_request_handler("/health", "/health");
         hrh.serve(buf, size, res);
+    }
+
+    void testSleepHandler(char* buf, size_t size) {
+        sleep_request_handler slrh = sleep_request_handler("/sleep", "/sleep");
+        slrh.serve(buf, size, res);
     }
 };
 
@@ -128,6 +134,21 @@ TEST_F(RequestHandlerTest, staticServeFileNotExist) {
     testStaticHandler(buf, size);
     EXPECT_EQ(res.result(), http::status::not_found);
     EXPECT_EQ(res.base()[http::field::content_type], "text/html");
+}
+
+TEST_F(RequestHandlerTest, sleepServeSucceeds) {
+    char buf[] = "foobar";
+    size_t size = std::strlen(buf);
+    testSleepHandler(buf, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+    EXPECT_EQ(res.base()[http::field::content_type], "text/plain");
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "Thread slept for 5 seconds.";
+    EXPECT_EQ(res_body, res_body_expected);
 }
 
 /**** CRUD Handler Unit Tests ****/

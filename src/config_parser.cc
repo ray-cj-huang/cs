@@ -25,6 +25,7 @@ const std::string ENDPOINT = "location";
 const std::string STATIC_NAME = "StaticHandler";
 const std::string ECHO_NAME = "EchoHandler";
 const std::string CRUD_NAME = "CRUDHandler";
+const std::string SLEEP_NAME = "SleepHandler";
 const std::string HEALTH_NAME = "HealthHandler";
 const std::string ROOT = "root";
 
@@ -52,7 +53,8 @@ int NginxConfig::GetPort() {
 void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_paths,
                            std::unordered_set<std::string> &echo_paths,
                            std::unordered_map<std::string, std::string> &CRUD_paths,
-                           std::unordered_set<std::string> &health_paths) {
+                           std::unordered_set<std::string> &health_paths,
+                           std::unordered_set<std::string> &sleep_paths) {
 
   for (auto singleStatement : statements_) {
     if (singleStatement->tokens_.size() && singleStatement->tokens_[0] == ENDPOINT && singleStatement->tokens_.size() >= ENDPOINT_MIN_SIZE) {
@@ -60,7 +62,19 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
       std::string endpoint = singleStatement->tokens_[1];
       std::string endpoint_type = singleStatement->tokens_[2];
 
-      if (endpoint_type == STATIC_NAME) {
+      if (endpoint_type == ECHO_NAME) {
+        echo_paths.insert(endpoint);
+        Logger::logInfo("Echo path " + endpoint + " successfully parsed.");
+      }
+      else if (endpoint_type == SLEEP_NAME) {
+        sleep_paths.insert(endpoint);
+        Logger::logInfo("Sleep path " + endpoint + " successfully parsed.");
+      }
+      else if (endpoint_type == HEALTH_NAME) {
+        health_paths.insert(endpoint);
+        Logger::logInfo("Health path " + endpoint + " successfully parsed.");
+      }
+      else if (endpoint_type == STATIC_NAME) {
         if (singleStatement->tokens_.size() >= STATIC_ENDPOINT_SIZE) {
           if (singleStatement->child_block_) {
             for (auto childStatement : singleStatement->child_block_->statements_) {
@@ -76,10 +90,6 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
           Logger::logWarning("When specifying a static endpoint in the config file, you need to specify both the endpoint and the path.");
         }
         
-      }
-      else if (endpoint_type == ECHO_NAME) {
-        echo_paths.insert(endpoint);
-        Logger::logInfo("Echo path " + endpoint + " successfully parsed.");
       }
       else if (endpoint_type == CRUD_NAME) {
         if (singleStatement->tokens_.size() >= STATIC_ENDPOINT_SIZE) {
@@ -98,13 +108,9 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
         }
         
       }
-      else if (endpoint_type == HEALTH_NAME) {
-        health_paths.insert(endpoint);
-        Logger::logInfo("Health path " + endpoint + " successfully parsed.");
-      }
     }
     if (singleStatement->child_block_.get() != nullptr) {
-      singleStatement->child_block_->GetPaths(static_paths, echo_paths, CRUD_paths, health_paths);
+      singleStatement->child_block_->GetPaths(static_paths, echo_paths, CRUD_paths, health_paths, sleep_paths);
     }
   }
 }

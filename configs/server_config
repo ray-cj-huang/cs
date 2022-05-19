@@ -22,4 +22,6 @@ server {
   location /health HealthHandler {
   }
 
+  location /sleep SleepHandler {
+  }
 }

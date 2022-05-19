@@ -15,6 +15,7 @@
 #include "static_request_handler_factory.h"
 #include "echo_request_handler_factory.h"
 #include "crud_request_handler_factory.h"
+#include "sleep_request_handler_factory.h"
 #include "health_request_handler_factory.h"
 #include "file_system_fake.h"
 
@@ -33,46 +34,54 @@ class RequestHandlerFactoryTest : public ::testing::Test {
     static_request_handler_factory srh_factory = static_request_handler_factory(TEST_ROOT);
     crud_request_handler_factory crh_factory = crud_request_handler_factory(TEST_ROOT, ffs);
     health_request_handler_factory hrh_factory = health_request_handler_factory();
+    sleep_request_handler_factory slrh_factory = sleep_request_handler_factory();
 
     void testErrorRHCreate(std::string location, std::string url) {
       request_handler* err_rh = err_rh_factory.create(location, url);
-      EXPECT_EQ(err_rh->location_, "/echo");
-      EXPECT_EQ(err_rh->url_, "/echo");
+      EXPECT_EQ(err_rh->location_, location);
+      EXPECT_EQ(err_rh->url_, url);
       delete err_rh;
     }
     
     void testERHCreate(std::string location, std::string url) {
       request_handler* erh = erh_factory.create(location, url);
-      EXPECT_EQ(erh->location_, "/echo");
-      EXPECT_EQ(erh->url_, "/echo");
+      EXPECT_EQ(erh->location_, location);
+      EXPECT_EQ(erh->url_, url);
       delete erh;
     }
 
     void testSRHCreate(std::string location, std::string url) {
       request_handler* srh = srh_factory.create(location, url);
-      EXPECT_EQ(srh->location_, "/echo");
-      EXPECT_EQ(srh->url_, "/echo");
+      EXPECT_EQ(srh->location_, location);
+      EXPECT_EQ(srh->url_, url);
       delete srh;
     }
 
     void testCRHCreate(std::string location, std::string url) {
       request_handler* crh = crh_factory.create(location, url);
-      EXPECT_EQ(crh->location_, "/echo");
-      EXPECT_EQ(crh->url_, "/echo");
+      EXPECT_EQ(crh->location_, location);
+      EXPECT_EQ(crh->url_, url);
       delete crh;
       delete ffs;
     }
 
     void testHRHCreate(std::string location, std::string url) {
       request_handler* hrh = hrh_factory.create(location, url);
-      EXPECT_EQ(hrh->location_, "/echo");
-      EXPECT_EQ(hrh->url_, "/echo");
+      EXPECT_EQ(hrh->location_, location);
+      EXPECT_EQ(hrh->url_, url);
       delete hrh;
+    }
+
+    void testSLRHCreate(std::string location, std::string url) {
+      request_handler* slrh = slrh_factory.create(location, url);
+      EXPECT_EQ(slrh->location_, location);
+      EXPECT_EQ(slrh->url_, url);
+      delete slrh;
     }
 };
 
-TEST_F(RequestHandlerFactoryTest, ErrRHFactoryCreate) {
-  testErrorRHCreate("/echo", "/echo");
+TEST_F(RequestHandlerFactoryTest, ErrorRHFactoryCreate) {
+  testErrorRHCreate("/", "/");
 }
 
 TEST_F(RequestHandlerFactoryTest, ERHFactoryCreate) {
@@ -80,13 +89,17 @@ TEST_F(RequestHandlerFactoryTest, ERHFactoryCreate) {
 }
 
 TEST_F(RequestHandlerFactoryTest, SRHFactoryCreate) {
-  testSRHCreate("/echo", "/echo");
+  testSRHCreate("/static", "/static");
 }
 
 TEST_F(RequestHandlerFactoryTest, CRHFactoryCreate) {
-  testCRHCreate("/echo", "/echo");
+  testCRHCreate("/crud", "/crud");
 }
 
 TEST_F(RequestHandlerFactoryTest, HRHFactoryCreate) {
   testHRHCreate("/echo", "/echo");
+}
+
+TEST_F(RequestHandlerFactoryTest, SLRHFactoryCreate) {
+  testSLRHCreate("/sleep", "/sleep");
 }

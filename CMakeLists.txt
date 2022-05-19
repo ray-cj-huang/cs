@@ -49,11 +49,13 @@ add_library(static_request_handler_lib src/request_handlers/static_request_handl
 add_library(crud_request_handler_lib src/request_handlers/crud_request_handler.cc)
 add_library(health_request_handler_lib src/request_handlers/health_request_handler.cc)
 target_link_libraries(crud_request_handler_lib Boost::filesystem)
+add_library(sleep_request_handler_lib src/request_handlers/sleep_request_handler.cc)
 add_library(error_request_handler_factory_lib src/factories/error_request_handler_factory.cc)
 add_library(echo_request_handler_factory_lib src/factories/echo_request_handler_factory.cc)
 add_library(static_request_handler_factory_lib src/factories/static_request_handler_factory.cc)
 add_library(crud_request_handler_factory_lib src/factories/crud_request_handler_factory.cc)
 add_library(health_request_handler_factory_lib src/factories/health_request_handler_factory.cc)
+add_library(sleep_request_handler_factory_lib src/factories/sleep_request_handler_factory.cc)
 add_library(file_system_base_lib src/file_system/file_system_base.cc)
 target_link_libraries(file_system_base_lib Boost::filesystem)
 add_library(file_system_real_lib src/file_system/file_system_real.cc)
@@ -71,11 +73,13 @@ target_link_libraries(server server_lib session_lib config_parser_lib
     error_request_handler_factory_lib
     crud_request_handler_factory_lib
     health_request_handler_factory_lib
+    sleep_request_handler_factory_lib
     echo_request_handler_lib
     static_request_handler_lib
     error_request_handler_lib
     crud_request_handler_lib
     health_request_handler_lib
+    sleep_request_handler_lib
     request_handler_lib
     Boost::system Boost::thread Boost::regex
     Boost::log_setup Boost::log)
@@ -94,7 +98,7 @@ target_link_libraries(session_test session_lib gtest_main logger
 
 add_executable(request_handler_test tests/request_handler_test.cc)
 target_link_libraries(request_handler_test echo_request_handler_lib static_request_handler_lib error_request_handler_lib
-    crud_request_handler_lib health_request_handler_lib
+    crud_request_handler_lib health_request_handler_lib sleep_request_handler_lib
     file_system_fake_lib file_system_base_lib
     request_handler_lib gtest_main logger Boost::system 
     Boost::thread Boost::regex Boost::log_setup Boost::log)
@@ -102,9 +106,9 @@ target_link_libraries(request_handler_test echo_request_handler_lib static_reque
 add_executable(request_handler_factory_test tests/request_handler_factory_test.cc)
 target_link_libraries(request_handler_factory_test 
     echo_request_handler_factory_lib static_request_handler_factory_lib error_request_handler_factory_lib
-    crud_request_handler_factory_lib health_request_handler_factory_lib
+    crud_request_handler_factory_lib health_request_handler_factory_lib sleep_request_handler_factory_lib
     echo_request_handler_lib static_request_handler_lib error_request_handler_lib crud_request_handler_lib
-    health_request_handler_lib request_handler_lib
+    health_request_handler_lib sleep_request_handler_lib request_handler_lib
     file_system_fake_lib file_system_base_lib
     gtest_main logger Boost::system Boost::thread Boost::regex 
     Boost::log_setup Boost::log)
@@ -135,8 +139,8 @@ include(cmake/CodeCoverageReportConfig.cmake)
 generate_coverage_report(
     TARGETS server server_lib session_lib config_parser_lib
         error_request_handler_lib echo_request_handler_lib static_request_handler_lib
-        crud_request_handler_lib health_request_handler_lib request_handler_lib
+        crud_request_handler_lib health_request_handler_lib sleep_request_handler_lib request_handler_lib
         error_request_handler_factory_lib echo_request_handler_factory_lib static_request_handler_factory_lib
-        crud_request_handler_factory_lib health_request_handler_factory_lib
+        crud_request_handler_factory_lib health_request_handler_factory_lib sleep_request_handler_factory_lib
         file_system_real_lib file_system_fake_lib file_system_base_lib
     TESTS server_test session_test config_parser_test request_handler_test request_handler_factory_test file_system_test)
