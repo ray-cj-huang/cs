@@ -21,5 +21,6 @@ status health_request_handler::serve(char* req_data, size_t bytes_transferred, h
     res.body().data = data;
     res.body().size = strlen(data);
     Logger::logInfo("health_request_handler - serve - success");
+    logRequest(res.result());
     return {true, ""};
 }

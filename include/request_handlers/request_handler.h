@@ -19,6 +19,7 @@ public:
     request_handler(std::string location, std::string url);
     virtual status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) = 0;
 protected:
+    void logRequest(http::status res_status) const;
     std::string location_;
     std::string url_;
 private:

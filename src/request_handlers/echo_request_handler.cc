@@ -18,5 +18,6 @@ status echo_request_handler::serve(char* req_data, size_t bytes_transferred, htt
     res.body().data = req_data;
     res.body().size = bytes_transferred;
     Logger::logInfo("echo_request_handler - serve - success");
+    logRequest(res.result());
     return {true, ""};
 }

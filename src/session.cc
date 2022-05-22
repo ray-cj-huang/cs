@@ -33,7 +33,7 @@ void session::handle_read(const boost::system::error_code& error,
 
   if (socket_.is_open())
   {
-    Logger::logInfo("Logging Data from " + socket_.remote_endpoint().address().to_string());
+    Logger::logInfo("METRICS – request_ip:" + socket_.remote_endpoint().address().to_string());
   }
   Logger::logInfo(data);
 

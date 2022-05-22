@@ -105,5 +105,6 @@ status static_request_handler::serve(char* req_data, size_t bytes_transferred, h
     res.body().data = buffer;
     res.body().size = length;
     Logger::logInfo("static_request_handler - serve - success");
+    logRequest(res.result());
     return {true, ""};
 }

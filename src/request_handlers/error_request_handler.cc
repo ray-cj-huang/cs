@@ -57,5 +57,6 @@ status error_request_handler::serve(char* req_data, size_t bytes_transferred, ht
     res.body().size = length;
 
     Logger::logInfo("error_request_handler - serve - success");
+    logRequest(res.result());
     return {true, ""};
 }

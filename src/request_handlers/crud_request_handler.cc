@@ -114,6 +114,7 @@ status crud_request_handler::create(
     response.body().data = buf;
     response.body().size = data_string.size();
     Logger::logInfo("crud_request_handler - serve - success");
+    logRequest(response.result());
     return {true, ""};
 }
 
@@ -148,6 +149,7 @@ status crud_request_handler::retrieve(
     memcpy(buffer, data.c_str(), data.size());
     response.body().data = buffer;
     response.body().size = data.size();
+    logRequest(response.result());
     return {!default_404, message};
 
 }
@@ -169,6 +171,7 @@ status crud_request_handler::update(
         response.body().data = buf;
         response.body().size = data_string.size();
         Logger::logInfo("crud_request_handler - serve - success");
+        logRequest(response.result());
         return {true, ""};
       }
       else { // if file cannot be updated
@@ -180,6 +183,7 @@ status crud_request_handler::update(
         response.body().data = buf;
         response.body().size = data_string.size();
         Logger::logInfo("crud_request_handler - serve - failed");
+        logRequest(response.result());
         return {false, "internal server error"};
       }
     } catch (std::exception &e) {
@@ -200,6 +204,7 @@ status crud_request_handler::update(
   response.body().data = buf;
   response.body().size = data_string.size();
   Logger::logInfo("crud_request_handler - serve - failed");
+  logRequest(response.result());
   return {false, "bad request"};
 }
 
@@ -221,6 +226,7 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
           response.body().data = buf;
           response.body().size = data_string.size();
           Logger::logInfo("crud_request_handler - serve - failed");
+          logRequest(response.result());
           return {false, "internal server error"};
         }
 
@@ -232,6 +238,7 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
         response.body().data = buf;
         response.body().size = data_string.size();
         Logger::logInfo("crud_request_handler - serve - success");
+        logRequest(response.result());
         // check if the file still exist after deletion
         return {true, ""};
       }
@@ -244,6 +251,7 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
         response.body().data = buf;
         response.body().size = data_string.size();
         Logger::logInfo("crud_request_handler - serve - failed");
+        logRequest(response.result());
         return {false, "internal server error"};
       }
     } catch (std::exception &e) {
@@ -264,6 +272,7 @@ status crud_request_handler::remove( // keyword 'delete' cannot be customized
   response.body().data = buf;
   response.body().size = data_string.size();
   Logger::logInfo("crud_request_handler - serve - failed");
+  logRequest(response.result());
   return {false, "bad request"};
 
 }
@@ -299,5 +308,6 @@ status crud_request_handler::list(
     memcpy(buffer, data.c_str(), data.size());
     response.body().data = buffer;
     response.body().size = data.size();
+    logRequest(response.result());
     return {!default_404, message};
 }
