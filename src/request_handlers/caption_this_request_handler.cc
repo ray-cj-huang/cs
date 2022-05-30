@@ -2,6 +2,8 @@
 #include "file_system_base.h"
 #include "logger.h"
 
+#include <string>
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace fs = boost::filesystem;
@@ -67,11 +69,15 @@ status caption_this_request_handler::serve(char* req_data, size_t bytes_transfer
         return post_submission(path, req_parser.get(), res);
     }
     else if (verb == http::verb::get) {
-        // TODO(!): add logic for getting submission page
-        if (isdigit(path.at(path.length() - 1))) {
-            return get_submission_with_id(path, res);
+        if (rel_path == "" || rel_path == "/") {
+            return gallery(path_cat(path, "/submit"), req_parser.get(), res);
+        } else if (isdigit(path.at(path.length() - 1))) {
+            return get_submission_with_id(path.at(path.length() - 1) - '0', res);
+        } else if (rel_path == "/submit" || rel_path == "/submit/") {
+            return get_submission_page(res);
+        } else {
+            return {false, "invalid get request to caption this handler"};
         }
-        return gallery(path, req_parser.get(), res);
     }
     // else if (verb == http::verb::put) {
     //   return update(path, req_parser.get(), res);
@@ -83,7 +89,7 @@ status caption_this_request_handler::serve(char* req_data, size_t bytes_transfer
     return {false, "cannot handle request"};
 }
 
-// Finds next available ID and writes POST body
+// Finds next available ID and writes the submission
 status caption_this_request_handler::post_submission(
     const boost::filesystem::path& path, 
     const http::request<http::string_body>& request,
@@ -120,17 +126,118 @@ status caption_this_request_handler::post_submission(
 }
 
 
-// Reads data and returns to user
+// Returns generated html page with caption overlaid with image
 status caption_this_request_handler::get_submission_with_id(
-    const boost::filesystem::path& path,
+    int id,
+    http::response<http::buffer_body>& response
+) {
+    const std::string PAGE_404_PATH = "../static/404_error.html";
+    const std::string HTML_TEMPLATE_PATH = "../static/specific_submission_page.html";
+    bool default_404 = false;
+    std::string message = "";
+    std::string path = path_cat(path_cat(root_ , "submit"), std::to_string(id));
+    
+    std::string data;
+    std::string html_template;
+    std::string html_payload;
+    if (!fs_->read(path, data) || !fs_->read(HTML_TEMPLATE_PATH, html_template)) {
+        default_404 = true;
+        Logger::logError("404 file not found: " + path + " or " + HTML_TEMPLATE_PATH + ". Serving error page instead.");
+        if (!fs_->read(PAGE_404_PATH, data)) {
+            data = "404 Not Found";
+        }
+        response.result(http::status::not_found);
+        response.set(http::field::content_type, "text/html");
+        message = "404 Error Page";
+    } else {
+        // parse the txt file in assumed format
+        std::string top_caption = data.substr(0, data.find('\n'));
+        std::string rest = data.substr(top_caption.size() + 1);
+        std::string bottom_caption = rest.substr(0, rest.find('\n'));
+        std::string img_url = rest.substr(bottom_caption.size() + 1);
+
+        std::string img_placeholder = "[img]";
+        std::string top_text_placeholder = "[top text]";
+        std::string bottom_text_placeholder = "[bottom text]";
+
+        // create payload from template
+        html_payload = html_template.substr(0, html_template.find(img_placeholder));
+        html_payload += img_url;
+        int img_placeholder_end = html_template.find(img_placeholder) + img_placeholder.size();
+        html_payload += html_template.substr(
+            img_placeholder_end,
+            html_template.find(top_text_placeholder) - img_placeholder_end);
+        html_payload += top_caption;
+        int top_text_placeholder_end = html_template.find(top_text_placeholder) + top_text_placeholder.size();
+        html_payload += html_template.substr(
+            top_text_placeholder_end,
+            html_template.find(bottom_text_placeholder) - top_text_placeholder_end);
+        html_payload += bottom_caption;
+        html_payload += html_template.substr(html_template.find(bottom_text_placeholder) + bottom_text_placeholder.size());
+
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "text/html");
+        Logger::logInfo("caption_this_request_handler - serve - success");
+    }
+
+    std::cout << html_payload << std::endl;
+
+    char* buffer;
+    buffer = new char[html_payload.size()];
+    memcpy(buffer, html_payload.c_str(), html_payload.size());
+    response.body().data = buffer;
+    response.body().size = html_payload.size();
+    logRequest(response.result());
+    return {!default_404, message};
+
+}
+
+// Returns the static html page that allows users to submit captions
+status caption_this_request_handler::get_submission_page(
+    http::response<http::buffer_body>& response
+) const {
+    const std::string PAGE_404_PATH = "../static/404_error.html";
+    const std::string SUBMIT_HTML_PATH = "../static/submit_page.html";
+    bool default_404 = false;
+    std::string message = "";
+    
+    std::string data;
+    if (!fs_->read(SUBMIT_HTML_PATH, data)) {
+        default_404 = true;
+        Logger::logError("404 file not found: " + SUBMIT_HTML_PATH + ". Serving error page instead.");
+        if (!fs_->read(PAGE_404_PATH, data)) {
+            data = "404 Not Found";
+        }
+        response.result(http::status::not_found);
+        response.set(http::field::content_type, "text/html");
+        message = "404 Error Page";
+    } else {
+        response.result(http::status::ok);
+        response.set(http::field::content_type, "text/html");
+        Logger::logInfo("caption_this_request_handler - serve - success");
+    }
+
+    char* buffer = new char[data.size()];
+    memcpy(buffer, data.c_str(), data.size());
+    response.body().data = buffer;
+    response.body().size = data.size();
+    logRequest(response.result());
+    return {!default_404, message};
+
+}
+
+// Returns a generated html page with the gallery of images with captions overlaid
+status caption_this_request_handler::gallery(
+    const boost::filesystem::path& path, 
+    const http::request<http::string_body>& request, 
     http::response<http::buffer_body>& response
 ) const {
     const std::string PAGE_404_PATH = "../static/404_error.html";
     bool default_404 = false;
     std::string message = "";
-    
+
     std::string data;
-    if (!fs_->read(path, data)) {
+    if (!fs_->list_directory(path, data)) {
         default_404 = true;
         Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
         if (!fs_->read(PAGE_404_PATH, data)) {
@@ -152,7 +259,6 @@ status caption_this_request_handler::get_submission_with_id(
     response.body().size = data.size();
     logRequest(response.result());
     return {!default_404, message};
-
 }
 
 // status caption_this_request_handler::update(
@@ -277,38 +383,3 @@ status caption_this_request_handler::get_submission_with_id(
 //   return {false, "bad request"};
 
 // }
-
-// Returns the list of file names under path in the response.
-status caption_this_request_handler::gallery(
-    const boost::filesystem::path& path, 
-    const http::request<http::string_body>& request, 
-    http::response<http::buffer_body>& response
-) const {
-    const std::string PAGE_404_PATH = "../static/404_error.html";
-    bool default_404 = false;
-    std::string message = "";
-
-    std::string data;
-    if (!fs_->list_directory(path, data)) {
-        default_404 = true;
-        Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
-        if (!fs_->read(PAGE_404_PATH, data)) {
-            data = "404 Not Found";
-        }
-        response.result(http::status::not_found);
-        response.set(http::field::content_type, "text/html");
-        message = "404 Error Page";
-    } else {
-        response.result(http::status::ok);
-        response.set(http::field::content_type, "application/json");
-        Logger::logInfo("caption_this_request_handler - serve - success");
-    }
-
-    char* buffer;
-    buffer = new char[data.size()];
-    memcpy(buffer, data.c_str(), data.size());
-    response.body().data = buffer;
-    response.body().size = data.size();
-    logRequest(response.result());
-    return {!default_404, message};
-}

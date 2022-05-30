@@ -28,9 +28,9 @@ class caption_this_request_handler: public request_handler
             http::response<http::buffer_body>& response
         ) const;
         status get_submission_with_id( // GET submit id
-            const boost::filesystem::path& path,
+            int id,
             http::response<http::buffer_body>& response
-        ) const;
+        );
         // status update( // POST(or PUT) submit existing ID
         //     const boost::filesystem::path& path, 
         //     const http::request<http::string_body>& request, 

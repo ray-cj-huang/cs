@@ -4,5 +4,6 @@ build
 build_*
 mirror
 
-/log
-/crud
+log/
+crud/
+captions/
