@@ -27,6 +27,7 @@ const std::string ECHO_NAME = "EchoHandler";
 const std::string CRUD_NAME = "CRUDHandler";
 const std::string SLEEP_NAME = "SleepHandler";
 const std::string HEALTH_NAME = "HealthHandler";
+const std::string CAPTION_THIS_NAME = "CaptionThisHandler";
 const std::string ROOT = "root";
 
 // To get the port number from config
@@ -54,7 +55,8 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
                            std::unordered_set<std::string> &echo_paths,
                            std::unordered_map<std::string, std::string> &CRUD_paths,
                            std::unordered_set<std::string> &health_paths,
-                           std::unordered_set<std::string> &sleep_paths) {
+                           std::unordered_set<std::string> &sleep_paths,
+                           std::unordered_map<std::string, std::string> &caption_this_paths) {
 
   for (auto singleStatement : statements_) {
     if (singleStatement->tokens_.size() && singleStatement->tokens_[0] == ENDPOINT && singleStatement->tokens_.size() >= ENDPOINT_MIN_SIZE) {
@@ -108,9 +110,26 @@ void NginxConfig::GetPaths(std::unordered_map<std::string, std::string> &static_
         }
         
       }
+      else if (endpoint_type == CAPTION_THIS_NAME) {
+        if (singleStatement->tokens_.size() >= STATIC_ENDPOINT_SIZE) {
+          if (singleStatement->child_block_) {
+            for (auto childStatement : singleStatement->child_block_->statements_) {
+              if (childStatement->tokens_.size() >= 2 && childStatement->tokens_[0] == ROOT) {
+                std::string directory = childStatement->tokens_[1];
+                caption_this_paths.insert( {{ endpoint, directory }});
+                Logger::logInfo("caption this path " + endpoint + " successfully parsed.");
+              }
+            }
+          }
+        }
+        else {
+          Logger::logWarning("When specifying a caption this endpoint in the config file, you need to specify both the endpoint and the path.");
+        }
+      }
     }
     if (singleStatement->child_block_.get() != nullptr) {
-      singleStatement->child_block_->GetPaths(static_paths, echo_paths, CRUD_paths, health_paths, sleep_paths);
+      singleStatement->child_block_->GetPaths(
+          static_paths, echo_paths, CRUD_paths, health_paths, sleep_paths, caption_this_paths);
     }
   }
 }

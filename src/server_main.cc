@@ -26,6 +26,7 @@
 #include "crud_request_handler_factory.h"
 #include "health_request_handler_factory.h"
 #include "sleep_request_handler_factory.h"
+#include "caption_this_request_handler_factory.h"
 #include "logger.h"
 
 #include "file_system_real.h"
@@ -58,14 +59,15 @@ int main(int argc, char* argv[]) {
         config.echo_paths_,
         config.CRUD_paths_,
         config.health_paths_,
-        config.sleep_paths_
+        config.sleep_paths_,
+        config.caption_this_paths_
     );
 
     std::unordered_map<std::string, request_handler_factory*> routes;
     // inserting 404 handler first ensures that its path won't be overwritten
     routes.insert({{"/", new error_request_handler_factory()}});
 
-    std::string echo_paths = "", static_paths = "", CRUD_paths = "", health_paths = "", sleep_paths = "";
+    std::string echo_paths = "", static_paths = "", CRUD_paths = "", health_paths = "", sleep_paths = "", caption_this_paths = "";
     for (const auto& elem: config.echo_paths_) // search for all echo handlers specified in config
     {
         echo_paths += "\"" + elem + "\", ";
@@ -78,7 +80,7 @@ int main(int argc, char* argv[]) {
         routes.insert({{elem.first, new static_request_handler_factory(elem.second)}});
     }
 
-    FileSystem* fs = new RealFileSystem(mutex_fs); // multithread-safe filesystem for CRUD handlers
+    FileSystem* fs = new RealFileSystem(mutex_fs); // multithread-safe filesystem for CRUD and caption this handlers
 
     for (const auto& elem: config.CRUD_paths_) // search for all CRUD handlers specified in config
     {
@@ -86,6 +88,7 @@ int main(int argc, char* argv[]) {
                         "\", filepath: \"" + elem.second + "\"}, ";
         routes.insert({{elem.first, new crud_request_handler_factory(elem.second, fs)}});
     }
+
     for (const auto& elem: config.sleep_paths_) // search for all sleep handlers specified in config
     {
         sleep_paths += "\"" + elem + "\", ";
@@ -98,6 +101,14 @@ int main(int argc, char* argv[]) {
         routes.insert({{elem, new health_request_handler_factory()}});
     }
 
+    for (const auto& elem: config.caption_this_paths_) // search for all caption this handlers specified in config
+    {
+        caption_this_paths += "{url: \"" + elem.first +
+                        "\", filepath: \"" + elem.second + "\"}, ";
+        routes.insert({{elem.first, new caption_this_request_handler_factory(elem.second, fs)}});
+    }
+
+
     boost::asio::io_service io_service;
 
     const size_t THREAD_POOL_SIZE = 10;
@@ -109,6 +120,7 @@ int main(int argc, char* argv[]) {
     Logger::logInfo("CRUD Paths: " + CRUD_paths);
     Logger::logInfo("Health Paths: " + health_paths);
     Logger::logInfo("Sleep Paths: " + sleep_paths);
+    Logger::logInfo("Caption This Paths: " + caption_this_paths);
     s.run();
   }
   catch (std::exception& e)

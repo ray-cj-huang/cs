@@ -28,11 +28,13 @@ class NginxConfig {
   std::unordered_map<std::string, std::string> CRUD_paths_;
   std::unordered_set<std::string> health_paths_;
   std::unordered_set<std::string> sleep_paths_;
+  std::unordered_map<std::string, std::string> caption_this_paths_;
   void GetPaths(std::unordered_map<std::string, std::string> &static_paths,
                 std::unordered_set<std::string> &echo_paths,
                 std::unordered_map<std::string, std::string> &CRUD_paths,
                 std::unordered_set<std::string> &health_paths,
-                std::unordered_set<std::string> &sleep_paths);
+                std::unordered_set<std::string> &sleep_paths,
+                std::unordered_map<std::string, std::string> &caption_this_paths);
 
 
 };

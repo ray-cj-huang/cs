@@ -24,4 +24,8 @@ server {
 
   location /sleep SleepHandler {
   }
+
+  location /caption CaptionThisHandler {
+      root ../captions/;
+  }
 }

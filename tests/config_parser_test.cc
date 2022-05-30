@@ -25,24 +25,27 @@ class ConfigParserTest : public ::testing::Test {
                       std::unordered_map<std::string, std::string> &CRUD_paths,
                       std::unordered_set<std::string> &health_paths,
                       std::unordered_set<std::string> &sleep_paths,
+                      std::unordered_map<std::string, std::string> &caption_this_paths,
                       bool correct) {
       out_config.GetPaths(
           out_config.static_paths_,
           out_config.echo_paths_,
           out_config.CRUD_paths_,
           out_config.health_paths_,
-          out_config.sleep_paths_);
+          out_config.sleep_paths_,
+          out_config.caption_this_paths_);
       bool equal_static = out_config.static_paths_ == static_paths;
       bool equal_echo = out_config.echo_paths_ == echo_paths;
       bool equal_CRUD = out_config.CRUD_paths_ == CRUD_paths;
       bool equal_health = out_config.health_paths_ == health_paths;
       bool equal_sleep = out_config.sleep_paths_ == sleep_paths;
+      bool equal_caption_this = out_config.caption_this_paths_ == caption_this_paths;
       
       if (correct) {
-        EXPECT_TRUE(equal_static && equal_echo && equal_CRUD && equal_health && equal_sleep);
+        EXPECT_TRUE(equal_static && equal_echo && equal_CRUD && equal_health && equal_sleep && equal_caption_this);
       }
       else {
-        EXPECT_FALSE(equal_static && equal_echo && equal_CRUD && equal_health && equal_sleep);
+        EXPECT_FALSE(equal_static && equal_echo && equal_CRUD && equal_health && equal_sleep && equal_caption_this);
       }
     }
 
@@ -118,7 +121,8 @@ TEST_F(ConfigParserTest, EndpointsCorrectConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {} );
   std::unordered_set<std::string> expected_health( {} );    
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, true);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, true);
 }
 
 TEST_F(ConfigParserTest, EndpointsRedefinedPathConfig) {
@@ -128,7 +132,8 @@ TEST_F(ConfigParserTest, EndpointsRedefinedPathConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {} );
   std::unordered_set<std::string> expected_health( {} );
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, true);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, true);
 }
 
 /*  Wrong Test Cases for Endpoints Parsing */
@@ -141,7 +146,8 @@ TEST_F(ConfigParserTest, EndpointsEchoFewArgumentsConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {} );
   std::unordered_set<std::string> expected_health( {} );
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, false);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, false);
 }
 
 TEST_F(ConfigParserTest, EndpointsStaticFewArgumentsConfig) {
@@ -152,7 +158,8 @@ TEST_F(ConfigParserTest, EndpointsStaticFewArgumentsConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {} );
   std::unordered_set<std::string> expected_health( {} );
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, false);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, false);
 }
 
 TEST_F(ConfigParserTest, CRUDConfig) {
@@ -162,7 +169,8 @@ TEST_F(ConfigParserTest, CRUDConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {{ "/api", "../crud"}} );
   std::unordered_set<std::string> expected_health( {} );
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, true);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, true);
 }
 
 TEST_F(ConfigParserTest, healthConfig) {
@@ -172,7 +180,19 @@ TEST_F(ConfigParserTest, healthConfig) {
   std::unordered_map<std::string, std::string> expected_CRUD( {} );
   std::unordered_set<std::string> expected_health( { "/health" } );
   std::unordered_set<std::string> expected_sleep( {} );
-  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, true);
+  std::unordered_map<std::string, std::string> expected_caption_this( {} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, true);
+}
+
+TEST_F(ConfigParserTest, captionThisConfig) {
+  testParsing("caption_this_config", true);
+  std::unordered_map<std::string, std::string> expected_static( {} );
+  std::unordered_set<std::string> expected_echo( {} );
+  std::unordered_map<std::string, std::string> expected_CRUD( {} );
+  std::unordered_set<std::string> expected_health( {} );
+  std::unordered_set<std::string> expected_sleep( {} );
+  std::unordered_map<std::string, std::string> expected_caption_this( {{ "/caption", "../captions/" }} );
+  testGetPaths(expected_static, expected_echo, expected_CRUD, expected_health, expected_sleep, expected_caption_this, true);
 }
 
 TEST_F(ConfigParserTest, PortCorrectConfig) {

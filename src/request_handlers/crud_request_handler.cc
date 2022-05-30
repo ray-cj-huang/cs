@@ -14,7 +14,7 @@ crud_request_handler::crud_request_handler(std::string location, std::string url
 
 // Append an HTTP rel-path to a local filesystem path.
 // The returned path is normalized for the platform.
-std::string path_cat(
+std::string crud_request_handler::path_cat(
   beast::string_view base,
   beast::string_view path
 ) {
@@ -61,7 +61,7 @@ status crud_request_handler::serve(char* req_data, size_t bytes_transferred, htt
     auto verb = req_parser.get().method();
     std::string full_path(req_parser.get().target());
     std::string rel_path = full_path.substr(full_path.find(location_) + location_.length());
-    std::string path = path_cat(root_, rel_path);
+    std::string path = crud_request_handler::path_cat(root_, rel_path);
 
     if (verb == http::verb::post) {
         return create(path, req_parser.get(), res);
