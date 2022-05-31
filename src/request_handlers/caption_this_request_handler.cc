@@ -8,10 +8,12 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 namespace fs = boost::filesystem;
 
-caption_this_request_handler::caption_this_request_handler(std::string location, std::string url, std::string root, FileSystem* fs):
+caption_this_request_handler::caption_this_request_handler(std::string location, std::string url, std::string root,
+                                                           FileSystem* fs, caption_file_parser* cfp):
     request_handler(location, url),
     root_(root),
-    fs_(fs)
+    fs_(fs),
+    cfp_(cfp)
 {}
 
 // Append an HTTP rel-path to a local filesystem path.
@@ -150,29 +152,25 @@ status caption_this_request_handler::get_submission_with_id(
         response.set(http::field::content_type, "text/html");
         message = "404 Error Page";
     } else {
-        // parse the txt file in assumed format
-        std::string top_caption = data.substr(0, data.find('\n'));
-        std::string rest = data.substr(top_caption.size() + 1);
-        std::string bottom_caption = rest.substr(0, rest.find('\n'));
-        std::string img_url = rest.substr(bottom_caption.size() + 1);
-
         std::string img_placeholder = "[img]";
         std::string top_text_placeholder = "[top text]";
         std::string bottom_text_placeholder = "[bottom text]";
 
+        caption_file cf = cfp_->read(data);
+
         // create payload from template
         html_payload = html_template.substr(0, html_template.find(img_placeholder));
-        html_payload += img_url;
+        html_payload += cf.img_url;
         int img_placeholder_end = html_template.find(img_placeholder) + img_placeholder.size();
         html_payload += html_template.substr(
             img_placeholder_end,
             html_template.find(top_text_placeholder) - img_placeholder_end);
-        html_payload += top_caption;
+        html_payload += cf.top_caption;
         int top_text_placeholder_end = html_template.find(top_text_placeholder) + top_text_placeholder.size();
         html_payload += html_template.substr(
             top_text_placeholder_end,
             html_template.find(bottom_text_placeholder) - top_text_placeholder_end);
-        html_payload += bottom_caption;
+        html_payload += cf.bot_caption;
         html_payload += html_template.substr(html_template.find(bottom_text_placeholder) + bottom_text_placeholder.size());
 
         response.result(http::status::ok);

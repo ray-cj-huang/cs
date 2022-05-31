@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "request_handler.h"
 #include "file_system_base.h"
+#include "caption_file_parser.h"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -15,7 +16,8 @@ class caption_this_request_handler: public request_handler
 {
     friend class RequestHandlerTest;
     public:
-        caption_this_request_handler(std::string location, std::string url, std::string root, FileSystem* fs);
+        caption_this_request_handler(std::string location, std::string url, std::string root, 
+                                     FileSystem* fs, caption_file_parser* cfp);
         status serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) override;
 
     private:
@@ -50,6 +52,7 @@ class caption_this_request_handler: public request_handler
         std::string path_cat(beast::string_view base, beast::string_view path);
         std::string root_;
         FileSystem* fs_; // used for primitive dependency injection
+        caption_file_parser* cfp_;
 };
 
 #endif
