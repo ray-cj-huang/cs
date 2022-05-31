@@ -36,6 +36,9 @@ server {
   location /health HealthHandler {
   }
 
+  location /caption CaptionThisHandler {
+      root ../tests/captions;
+  }
 }" > example_config_test
 
 ./bin/server example_config_test &
@@ -195,7 +198,7 @@ curl -X POST http://localhost:9080/api/objects -d "{\"name\": \"object 1\"}" > c
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Create Test 1"
+    echo "PASSED Integration Test for CRUD Create Test 1"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -212,7 +215,7 @@ curl -X POST http://localhost:9080/api/objects -d "{\"name\": \"object 2\"}" > c
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Create Test 2"
+    echo "PASSED Integration Test for CRUD Create Test 2"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -229,7 +232,7 @@ curl -X GET http://localhost:9080/api/objects/1 > crud_test_actual_result
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Retrieve Test 1"
+    echo "PASSED Integration Test for CRUD Retrieve Test 1"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -246,7 +249,7 @@ curl -X GET http://localhost:9080/api/objects/2 > crud_test_actual_result
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Retrieve Test 2"
+    echo "PASSED Integration Test for CRUD Retrieve Test 2"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -264,7 +267,7 @@ curl -X GET http://localhost:9080/api/objects/2 > crud_test_actual_result
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Update Test 1"
+    echo "PASSED Integration Test for CRUD Update Test 1"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -281,7 +284,7 @@ curl -X GET http://localhost:9080/api/objects/ > crud_test_actual_result
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for List Test 1"
+    echo "PASSED Integration Test for CRUD List Test 1"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -299,7 +302,7 @@ curl -X GET http://localhost:9080/api/objects/ > crud_test_actual_result
 crud_test_diff=$(diff -w crud_test_actual_result crud_test_sample_result)
 if [ -z "$crud_test_diff" ]
 then
-    echo "PASSED Integration Test for Delete Test 1"
+    echo "PASSED Integration Test for CRUD Delete Test 1"
 else
     echo "Compared actual:"
     cat crud_test_actual_result 1>&2
@@ -312,6 +315,100 @@ fi
 rm -rf crud
 rm crud_test_sample_result
 rm crud_test_actual_result
+
+# Caption This! Tests
+printf "\nRUNNING CAPTION THIS HANDLER TESTS\n\n"
+rm -rf ../tests/captions
+rm ct_test_sample_result
+rm ct_test_actual_result
+
+# Create Test
+echo -ne "{\"id\":1}" > ct_test_sample_result
+printf "foo\nbar\nhttps://test.com/xyz.jpg" | curl -X POST http://localhost:9080/caption/submit -d "$(</dev/stdin)" > ct_test_actual_result
+
+ct_test_diff=$(diff -w ct_test_actual_result ct_test_sample_result)
+if [ -z "$ct_test_diff" ]
+then
+    echo "PASSED Integration Test for CT Create Test (matching response)"
+else
+    echo "Compared actual:"
+    cat ct_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat ct_test_sample_result 1>&2
+    exit_code=1
+    kill -9 $pid_server
+    exit 1;
+fi
+
+echo -ne "foo\nbar\nhttps://test.com/xyz.jpg" > ct_test_sample_result
+cat ../tests/captions/submit/1 > ct_test_actual_result
+
+ct_test_diff=$(diff -w ct_test_actual_result ct_test_sample_result)
+if [ -z "$ct_test_diff" ]
+then
+    echo "PASSED Integration Test for CT Create Test (file generated)"
+else
+    echo "Compared actual:"
+    cat ct_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat ct_test_sample_result 1>&2
+    exit_code=1
+    kill -9 $pid_server
+    exit 1;
+fi
+
+# Retrieve Test
+curl -X GET http://localhost:9080/caption/1 > ct_test_actual_result
+
+ct_test_diff=$(diff ${EXPECTED_RESPONSE_PATH}/ct_retrieve_expected ct_test_actual_result)
+if [ "$ct_test_diff" == "" ]
+then
+    echo "PASSED Integration Test for CRUD Retrieve Test 1"
+else
+    echo "Compared actual:"
+    cat ct_test_actual_result 1>&2
+    echo
+    echo "with sample:"
+    cat "${EXPECTED_RESPONSE_PATH}/ct_retrieve_expected" 1>&2
+    exit_code=1
+    kill -9 $pid_server
+    exit 1;
+fi
+
+# TODO(bryanjwong): Add gallery tests, and additional tests for other functionality
+
+rm -rf ../tests/captions
+rm ct_test_sample_result
+rm ct_test_actual_result
+
+# Load Test (25 requests/second)
+printf "Running Load Test."
+
+# Desired rate is NUM_ITERS/SECS_ALLOTTED requests/sec
+NUM_ITERS=100;
+SECS_ALLOTTED=10;
+
+echo $NUM_ITERS $SECS_ALLOTTED $RATE
+
+rm ct_test_temp
+for i in $(seq 1 1 $NUM_ITERS); do
+    printf "iter $i\nfoo\nbar" | curl -X POST http://localhost:9080/caption/submit -d "$(</dev/stdin)" >> ct_test_temp &
+done;
+sleep $SECS_ALLOTTED
+cp ct_test_temp ct_test_actual_result
+COUNT=`grep -ow '{ "id":' ct_test_actual_result | wc -l`
+if [ $COUNT -lt $NUM_ITERS ]
+then
+    echo "FAIL: Only $COUNT requests completed in $SECS_ALLOTED seconds (below $NUM_ITERS/$SECS_ALLOTTED requests/sec)."
+    kill -9 $pid_server
+    exit 1;
+fi
+
+rm -rf ../tests/captions
+rm ct_test_temp
+rm ct_test_actual_result
 
 printf "All tests succeeded!"
 kill -9 $pid_server
