@@ -8,6 +8,7 @@ class RealFileSystem: public FileSystem {
         RealFileSystem(std::mutex& mutex_fs);
 
         bool exists( const boost::filesystem::path& path ) const override;
+        int get_next_id (const boost::filesystem::path& path) const override;
         bool is_directory( const boost::filesystem::path& path ) const override;
         bool remove( const boost::filesystem::path& path ) override;
         bool is_empty( const boost::filesystem::path& path ) const override;
@@ -19,6 +20,8 @@ class RealFileSystem: public FileSystem {
         // thread-unsafe
         boost::filesystem::path current_path() const override;
         void current_path(const boost::filesystem::path& path, boost::system::error_code& ec) override;
+        // wrapped by exists() and get_next_id()
+        bool exists_( const boost::filesystem::path& path ) const override;
 
 };
 

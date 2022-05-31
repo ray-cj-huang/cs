@@ -16,43 +16,13 @@ caption_this_request_handler::caption_this_request_handler(std::string location,
     cfp_(cfp)
 {}
 
-// Append an HTTP rel-path to a local filesystem path.
-// The returned path is normalized for the platform.
-std::string caption_this_request_handler::path_cat(
-  beast::string_view base,
-  beast::string_view path
-) {
-    if(base.empty()) {
-      return std::string(path);
+bool isNumber(const std::string& str)
+{
+    if (str.length() == 0) return false;
+    for (char const &c : str) {
+        if (std::isdigit(c) == 0) return false;
     }
-    std::string result(base);
-    char constexpr path_separator = '/';
-    if(result.back() == path_separator) {
-        result.resize(result.size() - 1);
-    }
-    result.push_back(path_separator);
-    if (!path.empty() && path[0] == path_separator) {
-      result.append(path.data() + 1, path.size() - 1);
-    } 
-    else {
-      result.append(path.data(), path.size());
-    }
-  return result;
-}
-
-// return the smallest available id inside a directory
-int caption_this_request_handler::get_next_id (const boost::filesystem::path& path) const {
-    int next_id = 1;
-    while (next_id < INT_MAX) {
-        boost::filesystem::path p{path.string() + "/" + std::to_string(next_id)};
-        if (!fs_->exists(p)) {
-            return next_id;
-        }
-        else {
-            next_id += 1;
-        }
-    }
-    return next_id;
+    return true;
 }
 
 status caption_this_request_handler::serve(char* req_data, size_t bytes_transferred, http::response<http::buffer_body> &res) {
@@ -65,16 +35,31 @@ status caption_this_request_handler::serve(char* req_data, size_t bytes_transfer
     auto verb = req_parser.get().method();
     std::string full_path(req_parser.get().target());
     std::string rel_path = full_path.substr(full_path.find(location_) + location_.length());
-    std::string path = caption_this_request_handler::path_cat(root_, rel_path);
+    std::string path = fs_->path_cat(root_, rel_path);
 
-    if (verb == http::verb::post) {
+    if (verb == http::verb::post && 
+        (rel_path == "/submit" || rel_path == "/submit/")
+    ) {
         return post_submission(path, req_parser.get(), res);
     }
     else if (verb == http::verb::get) {
+
+        std::string last_item_in_path =
+            (rel_path == "" || (rel_path.length() == 1 && rel_path[0] == '/'))
+                ? ""
+                : rel_path[rel_path.length() - 1] == '/'
+                    ? rel_path.substr(rel_path.find_last_of("/") + 1,
+                        rel_path.length() - rel_path.find_last_of("/") - 2)
+                    : rel_path.substr(rel_path.find_last_of("/") + 1,
+                        rel_path.length() - rel_path.find_last_of("/") - 1);
+
         if (rel_path == "" || rel_path == "/") {
-            return gallery(path_cat(path, "/submit"), req_parser.get(), res);
-        } else if (isdigit(path.at(path.length() - 1))) {
-            return get_submission_with_id(path.at(path.length() - 1) - '0', res);
+            return gallery(fs_->path_cat(path, "/submit"), req_parser.get(), res);
+        } else if (isNumber(last_item_in_path) &&
+                    ( rel_path.substr(0, rel_path.find(last_item_in_path)) == "" ||
+                      rel_path.substr(0, rel_path.find(last_item_in_path)) == "/" )
+        ) {
+            return get_submission_with_id(std::stoi(last_item_in_path), res);
         } else if (rel_path == "/submit" || rel_path == "/submit/") {
             return get_submission_page(res);
         } else {
@@ -111,7 +96,7 @@ status caption_this_request_handler::post_submission(
         }
     }
     // if the entity exists
-    int next_id = get_next_id(path);
+    int next_id = fs_->get_next_id(path);
     boost::filesystem::path p{path.string() + "/" + std::to_string(next_id)};
     fs_->upload_file(p, request.body());
 
@@ -137,7 +122,7 @@ status caption_this_request_handler::get_submission_with_id(
     const std::string HTML_TEMPLATE_PATH = "../static/specific_submission_page.html";
     bool default_404 = false;
     std::string message = "";
-    std::string path = path_cat(path_cat(root_ , "submit"), std::to_string(id));
+    std::string path = fs_->path_cat(fs_->path_cat(root_ , "submit"), std::to_string(id));
     
     std::string data;
     std::string html_template;

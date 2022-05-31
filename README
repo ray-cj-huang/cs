@@ -62,7 +62,7 @@ To build the code, follow the following commands from the root directory of the 
 mkdir build
 cd build
 cmake ..
-make
+make -j 4
 ```
 
 To run the tests, run these commands from the build folder:
@@ -75,7 +75,7 @@ To check the test coverage, run these commands from the build folder:
 
 ```
 cmake -DCMAKE_BUILD_TYPE=Coverage ..
-make coverage
+make coverage -j 4
 ```
 
 The test coverage data should be present in the output of the make command. You can view the detailed information on test coverage inside build/report/index.html.

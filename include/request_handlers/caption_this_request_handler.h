@@ -48,8 +48,6 @@ class caption_this_request_handler: public request_handler
             const http::request<http::string_body>& request, 
             http::response<http::buffer_body>& response
         ) const;
-        int get_next_id(const boost::filesystem::path& path) const;
-        std::string path_cat(beast::string_view base, beast::string_view path);
         std::string root_;
         FileSystem* fs_; // used for primitive dependency injection
         caption_file_parser* cfp_;

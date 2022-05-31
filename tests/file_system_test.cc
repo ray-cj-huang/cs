@@ -69,6 +69,7 @@ TEST_F(FileSystemTest, FakeListDirectory) {
     std::string list_str;
     EXPECT_TRUE(ffs_.list_directory("/usr/src", list_str));
     EXPECT_EQ(list_str, "[1, 2]");
+    EXPECT_EQ(ffs_.get_next_id("/usr/src"), 3);
 }
 
 TEST_F(FileSystemTest, RealAddFile) {
@@ -124,5 +125,13 @@ TEST_F(FileSystemTest, RealListDirectory) {
     std::string list_str;
     EXPECT_TRUE(rfs_.list_directory("./FileTest/src", list_str));
     EXPECT_EQ(list_str, "[1, 2]");
+    EXPECT_EQ(rfs_.get_next_id("./FileTest/src"), 3);
     EXPECT_TRUE(fs::remove_all("./FileTest"));
+}
+
+TEST_F(FileSystemTest, pathCat) {
+    EXPECT_EQ(ffs_.path_cat("/super/", "/cool/"), "/super/cool/");
+    EXPECT_EQ(ffs_.path_cat("/super/", "/"), "/super/");
+    EXPECT_EQ(ffs_.path_cat("", "/super/cool"), "/super/cool");
+    EXPECT_EQ(ffs_.path_cat("super", "cool"), "super/cool");
 }

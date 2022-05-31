@@ -56,9 +56,33 @@ FakeEntry::EntryType FakeFileSystem::traverse(FakeDirectory* &directory, fs::pat
 }
 
 bool FakeFileSystem::exists( const fs::path& path ) const {
+    mutex_fs_.lock();  /**** atomic start ****/
+    bool exist = FakeFileSystem::exists_(path);
+    mutex_fs_.unlock();  /**** atomic end ****/
+    return exist;
+}
+
+// return the smallest available id inside a directory
+int FakeFileSystem::get_next_id (const boost::filesystem::path& path) const {
+    int next_id = 1;
+    mutex_fs_.lock(); /**** atomic start ****/
+    while (next_id < INT_MAX) {
+        boost::filesystem::path p{path.string() + "/" + std::to_string(next_id)};
+        if (!exists_(p)) {
+            mutex_fs_.unlock();  /**** atomic end ****/
+            return next_id;
+        }
+        else {
+            next_id += 1;
+        }
+    }
+    mutex_fs_.unlock();  /**** atomic end ****/
+    return next_id;
+}
+
+bool FakeFileSystem::exists_( const fs::path& path ) const {
     bool if_exist = false;
     fs::path curr_path = path;
-    mutex_fs_.lock();  /**** atomic start ****/
     FakeDirectory* directory = root_.get();
     switch (traverse(directory, curr_path)) {
         case FakeEntry::ENTRY_TYPE_FILE:
@@ -70,7 +94,6 @@ bool FakeFileSystem::exists( const fs::path& path ) const {
             if_exist = false;
             break;
     }
-    mutex_fs_.unlock();  /**** atomic end ****/
     return if_exist;
 }
 

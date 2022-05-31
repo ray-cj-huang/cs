@@ -51,6 +51,7 @@ class FakeFileSystem: public FileSystem {
         FakeFileSystem(std::mutex& mutex_fs, boost::filesystem::path pwd = boost::filesystem::path("/"));
 
         bool exists( const boost::filesystem::path& path ) const override;
+        int get_next_id (const boost::filesystem::path& path) const override;
         bool is_directory( const boost::filesystem::path& path ) const override;
         bool remove( const boost::filesystem::path& path ) override;
         bool is_empty( const boost::filesystem::path& path ) const override;
@@ -66,6 +67,8 @@ class FakeFileSystem: public FileSystem {
         boost::filesystem::path current_path() const override;
         void current_path(const boost::filesystem::path& path, boost::system::error_code& ec) override;
         std::string ToString() const { return root_->name_ + "\n" + root_->ToString(); };
+        // wrapped by exists() and get_next_id()
+        bool exists_( const boost::filesystem::path& path ) const override;
     
     private:
         std::shared_ptr<FakeDirectory> root_;

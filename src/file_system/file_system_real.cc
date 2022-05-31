@@ -8,10 +8,33 @@ namespace fs = boost::filesystem;
 RealFileSystem::RealFileSystem(std::mutex& mutex_fs): FileSystem(mutex_fs) {}
 
 bool RealFileSystem::exists( const fs::path& path ) const {
-    bool flag;
     mutex_fs_.lock();  /**** atomic start ****/
-    flag = fs::exists(path);
+    bool flag = RealFileSystem::exists_(path);
     mutex_fs_.unlock();  /**** atomic end ****/
+    return flag;
+}
+
+// return the smallest available id inside a directory
+int RealFileSystem::get_next_id (const boost::filesystem::path& path) const {
+    int next_id = 1;
+    mutex_fs_.lock(); /**** atomic start ****/
+    while (next_id < INT_MAX) {
+        boost::filesystem::path p{path.string() + "/" + std::to_string(next_id)};
+        if (!exists_(p)) {
+            mutex_fs_.unlock();  /**** atomic end ****/
+            return next_id;
+        }
+        else {
+            next_id += 1;
+        }
+    }
+    mutex_fs_.unlock();  /**** atomic end ****/
+    return next_id;
+}
+
+bool RealFileSystem::exists_( const fs::path& path ) const {
+    bool flag;
+    flag = fs::exists(path);
     return flag;
 }
 
