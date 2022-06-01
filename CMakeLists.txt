@@ -109,17 +109,18 @@ target_link_libraries(request_handler_test
     echo_request_handler_lib static_request_handler_lib error_request_handler_lib
     crud_request_handler_lib health_request_handler_lib sleep_request_handler_lib
     caption_this_request_handler_lib file_system_fake_lib file_system_base_lib
-    request_handler_lib gtest_main logger Boost::system 
+    request_handler_lib caption_file_parser_lib
+    gtest_main logger Boost::system 
     Boost::thread Boost::regex Boost::log_setup Boost::log)
 
 add_executable(request_handler_factory_test tests/request_handler_factory_test.cc)
 target_link_libraries(request_handler_factory_test
-    caption_file_parser_lib 
     echo_request_handler_factory_lib static_request_handler_factory_lib error_request_handler_factory_lib
     crud_request_handler_factory_lib health_request_handler_factory_lib sleep_request_handler_factory_lib
     caption_this_request_handler_factory_lib
     echo_request_handler_lib static_request_handler_lib error_request_handler_lib crud_request_handler_lib
     health_request_handler_lib sleep_request_handler_lib caption_this_request_handler_lib request_handler_lib
+    caption_file_parser_lib 
     file_system_fake_lib file_system_base_lib
     gtest_main logger Boost::system Boost::thread Boost::regex 
     Boost::log_setup Boost::log)

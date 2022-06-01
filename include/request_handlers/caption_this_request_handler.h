@@ -33,16 +33,6 @@ class caption_this_request_handler: public request_handler
             int id,
             http::response<http::buffer_body>& response
         );
-        // status update( // POST(or PUT) submit existing ID
-        //     const boost::filesystem::path& path, 
-        //     const http::request<http::string_body>& request, 
-        //     http::response<http::buffer_body>& response
-        // ) const;
-        // status remove( // DELETE existing ID
-        //     const boost::filesystem::path& path, 
-        //     const http::request<http::string_body>& request, 
-        //     http::response<http::buffer_body>& response
-        // ) const;
         status gallery( // GET gallery
             const boost::filesystem::path& path, 
             const http::request<http::string_body>& request, 

@@ -11,6 +11,8 @@
 #include "echo_request_handler.h"
 #include "health_request_handler.h"
 #include "sleep_request_handler.h"
+#include "caption_this_request_handler.h"
+#include "caption_file_parser.h"
 
 #include "file_system_fake.h"
 
@@ -23,9 +25,12 @@ class RequestHandlerTest : public ::testing::Test {
   protected:
     void SetUp() override {
         fs = new FakeFileSystem(mutex_ffs, "/crud_root");
+        cfp = new caption_file_parser();
     }
     http::response<http::buffer_body> res;
     FileSystem* fs;
+    caption_file_parser* cfp;
+
 
     void testErrorHandler(char* buf, size_t size) {
         error_request_handler err_rh = error_request_handler("/echo", "/echo");
@@ -57,6 +62,12 @@ class RequestHandlerTest : public ::testing::Test {
     void testSleepHandler(char* buf, size_t size) {
         sleep_request_handler slrh = sleep_request_handler("/sleep", "/sleep");
         slrh.serve(buf, size, res);
+    }
+
+    void testCaptionThisHandler(char* buf, size_t size) {
+        caption_this_request_handler ctrh = caption_this_request_handler("/caption", 
+            "/whatever/since/this/is/never/used", "/caption_root", fs, cfp);
+        ctrh.serve(buf, size, res);
     }
 };
 
@@ -302,3 +313,87 @@ TEST_F(RequestHandlerTest, healthServe) {
     std::string res_body_expected = "OK";
     EXPECT_EQ(res_body, res_body_expected);
 }
+
+/**** Caption This Handler Unit Tests ****/
+
+TEST_F(RequestHandlerTest, captionThisPostSubmission) {
+    char buf[] = "POST /caption/submit HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf);
+    testCaptionThisHandler(buf, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "{ \"id\": 1 }";
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+TEST_F(RequestHandlerTest, captionThisGetSubmissionWithID) {
+    char buf_post_1[] = "POST /caption/submit HTTP/1.1\r\nContent-Length: 17\r\n\r\ntop\nbottom\nimgurl";
+    size_t size = std::strlen(buf_post_1);
+    testCaptionThisHandler(buf_post_1, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string specific_submit_page_path = "../static/specific_submission_page.html";
+    std::string body = "[img] [top text] [bottom text]";
+
+    fs->upload_file(specific_submit_page_path, body);
+
+    char buf_retrieve[] = "GET /caption/1 HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_retrieve);
+    testCaptionThisHandler(buf_retrieve, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = "imgurl top bottom";
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+TEST_F(RequestHandlerTest, captionThisGetSubmissionPage) {
+    std::string submit_page_path = "../static/submit_page.html";
+    std::string body = "submit page";
+
+    fs->upload_file(submit_page_path, body);
+
+    char buf_retrieve[] = "GET /caption/submit HTTP/1.1\r\n\r\n";
+    size_t size = std::strlen(buf_retrieve);
+    testCaptionThisHandler(buf_retrieve, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_body += ((char*)res.body().data)[i];
+    }
+    std::string res_body_expected = body;
+    EXPECT_EQ(res_body, res_body_expected);
+}
+
+// TODO(david)
+// TEST_F(RequestHandlerTest, captionThisGallery) {
+//     char buf_post_1[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello one";
+//     size_t size = std::strlen(buf_post_1);
+//     testCRUDHandler(buf_post_1, size);
+//     EXPECT_EQ(res.result(), http::status::ok);
+
+//     char buf_post_2[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello two";
+//     size = std::strlen(buf_post_2);
+//     testCRUDHandler(buf_post_2, size);
+//     EXPECT_EQ(res.result(), http::status::ok);
+
+//     char buf_list[] = "GET /crud/Shoe HTTP/1.1\r\n\r\n";
+//     size = std::strlen(buf_list);
+//     testCRUDHandler(buf_list, size);
+//     EXPECT_EQ(res.result(), http::status::ok);
+
+//     std::string res_body;
+//     for (int i = 0; i < res.body().size; i++) {
+//         res_body += ((char*)res.body().data)[i];
+//     }
+//     std::string res_body_expected = "[1, 2]";
+//     EXPECT_EQ(res_body, res_body_expected);
+// }

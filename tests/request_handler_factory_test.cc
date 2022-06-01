@@ -10,6 +10,7 @@
 #include "echo_request_handler.h"
 #include "crud_request_handler.h"
 #include "health_request_handler.h"
+#include "caption_this_request_handler.h"
 #include "request_handler_factory.h"
 #include "error_request_handler_factory.h"
 #include "static_request_handler_factory.h"
@@ -17,6 +18,7 @@
 #include "crud_request_handler_factory.h"
 #include "sleep_request_handler_factory.h"
 #include "health_request_handler_factory.h"
+#include "caption_this_request_handler_factory.h"
 #include "file_system_fake.h"
 
 namespace beast = boost::beast;
@@ -35,6 +37,8 @@ class RequestHandlerFactoryTest : public ::testing::Test {
     crud_request_handler_factory crh_factory = crud_request_handler_factory(TEST_ROOT, ffs);
     health_request_handler_factory hrh_factory = health_request_handler_factory();
     sleep_request_handler_factory slrh_factory = sleep_request_handler_factory();
+    FileSystem* ffs2 = new FakeFileSystem(mutex_ffs);
+    caption_this_request_handler_factory ctrh_factory = caption_this_request_handler_factory(TEST_ROOT, ffs2);
 
     void testErrorRHCreate(std::string location, std::string url) {
       request_handler* err_rh = err_rh_factory.create(location, url);
@@ -78,6 +82,14 @@ class RequestHandlerFactoryTest : public ::testing::Test {
       EXPECT_EQ(slrh->url_, url);
       delete slrh;
     }
+
+    void testCTRHCreate(std::string location, std::string url) {
+      request_handler* ctrh = ctrh_factory.create(location, url);
+      EXPECT_EQ(ctrh->location_, location);
+      EXPECT_EQ(ctrh->url_, url);
+      delete ctrh;
+      delete ffs2;
+    }
 };
 
 TEST_F(RequestHandlerFactoryTest, ErrorRHFactoryCreate) {
@@ -102,4 +114,8 @@ TEST_F(RequestHandlerFactoryTest, HRHFactoryCreate) {
 
 TEST_F(RequestHandlerFactoryTest, SLRHFactoryCreate) {
   testSLRHCreate("/sleep", "/sleep");
+}
+
+TEST_F(RequestHandlerFactoryTest, CTRHFactoryCreate) {
+  testCTRHCreate("/caption", "/caption");
 }
