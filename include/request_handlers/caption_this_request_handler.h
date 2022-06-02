@@ -3,6 +3,7 @@
 
 #include <boost/beast/http.hpp>
 #include <string>
+#include <vector>
 
 #include "logger.h"
 #include "request_handler.h"
@@ -41,6 +42,12 @@ class caption_this_request_handler: public request_handler
         std::string root_;
         FileSystem* fs_; // used for primitive dependency injection
         caption_file_parser* cfp_;
+        std::vector<std::string> images_ = {
+            "https://i.redd.it/nb0lmgrfrf821.png",
+            "https://pagesix.com/wp-content/uploads/sites/3/2022/03/will-smith-chris-rock-24.jpg?quality=90&strip=all",
+            "https://assets.vogue.com/photos/5891464f97a3db337a2494ed/master/w_2560%2Cc_limit/00-holding-best-barack-obama-memes.jpg",
+            "https://honda-tech.com/forums/attachments/general-discussion-debate-40/106328d1265997440-memeable-picture-n729670114_2154820_5123.jpg"
+        };
 };
 
 #endif

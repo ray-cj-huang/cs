@@ -1,14 +1,81 @@
+<!DOCTYPE html>
 <html>
-<head>
-<style type=text/css>
 
-</style>
+<head>
+    <style type=text/css>
+        /* Container holding the image and the text */
+        .container {
+            position: relative;
+            text-align: center;
+            color: white;
+        }
+
+        .top {
+            position: absolute;
+            left: 50%;
+            top: 8px;
+        }
+
+        .bottom {
+            position: absolute;
+            left: 50%;
+            bottom: 8px;
+        }
+    </style>
 </head>
 
 <body>
-    <p>
-        This will be the submit page.
-    </p>
+    <div class="container">
+        <img src="[img]" alt="Image" style="width:50%;">
+        <div class="top" id="itcaption">Top Caption</div>
+        <div class="bottom" id="ibcaption">Bottom Caption</div>
+    </div>
+    <form>
+        <label for="tcaption">Top Caption:</label><br>
+        <input type="text" id="tcaption" name="tcaption" value="Top Caption" oninput="changeText(this, 'itcaption')"><br>
+        <label for="bcaption">Bottom Caption:</label><br>
+        <input type="text" id="bcaption" name="bcaption" value="Bottom Caption" oninput="changeText(this, 'ibcaption')"><br><br>
+        <input type="button" value="Submit" onclick="submitCaption()">
+    </form>
+
+    <script>
+        const submitCaption = () => {
+            const topCaption = document.getElementById('tcaption').value
+            const bottomCaption = document.getElementById('bcaption').value
+            const imageUrl = "[img]"
+            const body = `${topCaption}\n${bottomCaption}\n${imageUrl}`
+
+            fetch('/caption/submit', {
+                method: 'POST',
+                body,
+                headers: {
+                    'Content-type': 'text/plain',
+                    'Content-length': body.length
+                }
+            }).then((res) => {
+                if (res.ok) {
+                    return res.json()
+                }
+                return Promise.reject(res)
+            }).then((data) => {
+                console.log(data)
+                if (!data.id) {
+                    alert('There was a server error.')
+                } else {
+                    alert('Successfully sent your data to the server. Access your captioned image with the path, /caption/' + data.id)
+                }
+            }).catch((err) => {
+                console.warn('Something went wrong.', err)
+                alert('Submission not successful.')
+            })
+        }
+
+        const changeText = (input, divID) => {
+            const div = document.getElementById(divID)
+            div.innerHTML = input.value
+        }
+    </script>
 
 </body>
+
 </html>

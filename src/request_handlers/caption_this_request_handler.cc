@@ -2,6 +2,7 @@
 #include "file_system_base.h"
 #include "logger.h"
 
+#include <stdlib.h>
 #include <string>
 
 namespace beast = boost::beast;
@@ -158,18 +159,17 @@ status caption_this_request_handler::get_submission_with_id(
         html_payload += cf.bot_caption;
         html_payload += html_template.substr(html_template.find(bottom_text_placeholder) + bottom_text_placeholder.size());
 
+        data = html_payload;
         response.result(http::status::ok);
         response.set(http::field::content_type, "text/html");
         Logger::logInfo("caption_this_request_handler - serve - success");
     }
 
-    std::cout << html_payload << std::endl;
-
     char* buffer;
-    buffer = new char[html_payload.size()];
-    memcpy(buffer, html_payload.c_str(), html_payload.size());
+    buffer = new char[data.size()];
+    memcpy(buffer, data.c_str(), data.size());
     response.body().data = buffer;
-    response.body().size = html_payload.size();
+    response.body().size = data.size();
     logRequest(response.result());
     return {!default_404, message};
 
@@ -185,7 +185,8 @@ status caption_this_request_handler::get_submission_page(
     std::string message = "";
     
     std::string data;
-    if (!fs_->read(SUBMIT_HTML_PATH, data)) {
+    std::string html_template;
+    if (!fs_->read(SUBMIT_HTML_PATH, html_template)) {
         default_404 = true;
         Logger::logError("404 file not found: " + SUBMIT_HTML_PATH + ". Serving error page instead.");
         if (!fs_->read(PAGE_404_PATH, data)) {
@@ -195,6 +196,25 @@ status caption_this_request_handler::get_submission_page(
         response.set(http::field::content_type, "text/html");
         message = "404 Error Page";
     } else {
+        int random_num = rand() % images_.size();
+        std::string img_url = images_[random_num];
+        std::string img_placeholder = "[img]";
+
+        // create payload from template
+        std::string html_payload = html_template.substr(0, html_template.find(img_placeholder));
+        html_payload += img_url;
+        int img_placeholder_end = html_template.find(img_placeholder) + img_placeholder.size();
+        html_payload += html_template.substr(
+            img_placeholder_end,
+            html_template.substr(img_placeholder_end).find(img_placeholder));
+        html_payload += img_url;
+        int img_placeholder_end_2 = html_template.find(img_placeholder)
+            + html_template.substr(img_placeholder_end).find(img_placeholder)
+            + (img_placeholder.size() * 2);
+        html_payload += html_template.substr(img_placeholder_end_2);
+
+        data = html_payload;
+
         response.result(http::status::ok);
         response.set(http::field::content_type, "text/html");
         Logger::logInfo("caption_this_request_handler - serve - success");
