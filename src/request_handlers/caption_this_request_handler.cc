@@ -287,7 +287,14 @@ status caption_this_request_handler::gallery(
                 caption_file cf = cfp_->read(content);
 
                 // generate a new div based on the content 
-                std::string div = "<div class=\"container\"><img src=\"" + cf.img_url + "\"alt=\"Image\" style=\"width:100%;\"><div class=\"top\">" + cf.top_caption + "</div><div class=\"bottom\">" + cf.bot_caption + "</div></div>";
+                std::string div =
+                    "<button class=\"relative text-white text-sm flex flex-wrap md:w-1/3 w-full hover:opacity-70\"> \
+                        <a href=\"/caption/" + std::to_string(i+1) + "\" class=\"w-full h-full p-1 md:p-2\"> \
+                            <img src=\"" + cf.img_url  + "\"alt=\"Image\" class=\"block object-cover object-center w-full h-full rounded-lg\"> \
+                            <div class=\"absolute left-1/2 transform -translate-x-1/2 top-3 items-center break-words max-w-[80%]\">" + cf.top_caption + "</div> \
+                            <div class=\"absolute left-1/2 transform -translate-x-1/2 bottom-3 items-center break-words max-w-[80%]\">" + cf.bot_caption + "</div> \
+                        </a> \
+                    </button>";
                 divs.push_back(div);
             }
         }

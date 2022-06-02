@@ -65,6 +65,8 @@
                 } else {
                     alert('Successfully sent your data to the server. Access your captioned image with the path, /caption/' + data.id)
                 }
+            }).then(() => {
+                window.location.replace("/caption");
             }).catch((err) => {
                 console.warn('Something went wrong.', err)
                 alert('Submission not successful.')
@@ -79,8 +81,20 @@
 </head>
 
 
-<body>
-    <main class="min-h-screen w-screen">
+<body class="min-h-screen w-screen flex flex-col">
+    <nav>
+        <button type="button" class="md:pl-5 md:pt-5 pl-2 pt-2">
+            <a href="/caption" class="
+                text:xl md:text-2xl lg:text-4xl  flex
+                rounded-xl border border-transparent bg-white py-2
+                px-5 font-bold tracking-wider text-[#6988f4] shadow hover:bg-[#dfe6ff]
+                hover:text-[#6988f4]
+            ">
+                &larr;
+            </a>
+        </button>
+    </nav>
+    <main class="relative flex grow h-full w-screen md:m-5 m-2">
         <div
             class="absolute left-0 top-0 md:h-full h-4/5 md:w-3/5 w-full object-cover text-white text-xl tracking-wide font-bold">
             <img src="[img]" alt="Image" class="absolute h-full w-full object-cover">
@@ -93,17 +107,18 @@
             class="absolute md:w-2/5 w-full md:h-full h-[20%] md:right-0 md:top-0 md:left-auto md:bottom-auto left-1/2 bottom-0 md:transform-none transform -translate-x-1/2 flex flex-col md:justify-center md:gap-5 justify-around md:items-center items-end p-2">
             <div class="flex md:flex-col flex-row">
                 <label class="font-bold" for="tcaption">Top Caption:&nbsp;</label>
-                <input type="text" id="tcaption" name="tcaption" value="[top text]"
+                <input class="px-2 py-1" type="text" id="tcaption" name="tcaption" value="[top text]"
                     oninput="changeText(this, 'itcaption')">
             </div>
             <div class="flex md:flex-col flex-row">
                 <label class="font-bold" for="bcaption">Bottom Caption:&nbsp;</label>
-                <input type="text" id="bcaption" name="bcaption" value="[bottom text]"
+                <input class="px-2 py-1" type="text" id="bcaption" name="bcaption" value="[bottom text]"
                     oninput="changeText(this, 'ibcaption')">
             </div>
 
-            <input class="rounded-full bordered bg-[#6988f4] text-white hover:bg-white hover:text-black hover:cursor-pointer px-5 self-center" type="button" value="Submit"
-                onclick="submitCaption()">
+            <input
+                class="rounded-full bordered bg-[#6988f4] text-white hover:bg-white hover:text-black hover:cursor-pointer md:px-8 px-4 py-2 self-center"
+                type="button" value="Submit" onclick="submitCaption()">
         </form>
     </main>
 </body>

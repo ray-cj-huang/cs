@@ -2,30 +2,54 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style type=text/css>
-        /* Container holding the image and the text */
-        .container {
-            position: relative;
-            text-align: center;
-            color: white;
+        /* Background Animation */
+        body {
+            background: linear-gradient(-45deg, #f1f1f1, #F5F7FF, #dfe6ff, #6988f4);
+            background-size: 1000% 1000%;
+            animation: gradient 10s ease infinite;
+            height: 100vh;
         }
 
-        .top {
-            position: absolute;
-            left: 50%;
-            top: 8px;
-        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
 
-        .bottom {
-            position: absolute;
-            left: 50%;
-            bottom: 8px;
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 </head>
 
-<body>
-    PLACEHOLDER
+<body class="min-h-screen w-screen flex flex-col items-center">
+    <nav>
+        <button type="button" class="md:pt-10 md:pb-5 py-2">
+            <a href="/caption/submit" class="
+                text:xl md:text-2xl lg:text-4xl  flex
+                rounded-full border border-transparent bg-[#6988f4] py-2
+                md:px-10 px-5 font-bold tracking-wider text-white shadow hover:bg-white
+                hover:text-[#6988f4]
+            ">
+                Submit New Caption
+            </a>
+        </button>
+    </nav>
+    <main class="grow mx-auto">
+        <div class="lg:px-32 md:px-16 px-5 py-5">
+            <div class="flex flex-wrap md:flex-row flex-col">
+                PLACEHOLDER
+            </div>
+        </div>
+    </main>
 </body>
 
 </html>
