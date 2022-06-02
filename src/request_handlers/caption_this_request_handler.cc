@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 #include <string>
+#include <vector>
+#include <sstream>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -236,11 +238,15 @@ status caption_this_request_handler::gallery(
     http::response<http::buffer_body>& response
 ) const {
     const std::string PAGE_404_PATH = "../static/404_error.html";
+    const std::string HTML_TEMPLATE_PATH =  "../static/gallery_page.html";
     bool default_404 = false;
     std::string message = "";
+    std::string html_template = "";
+    std::string placeholder = "PLACEHOLDER";
+
 
     std::string data;
-    if (!fs_->list_directory(path, data)) {
+    if (!fs_->list_paths_directory(path, data)) {
         default_404 = true;
         Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
         if (!fs_->read(PAGE_404_PATH, data)) {
@@ -250,8 +256,65 @@ status caption_this_request_handler::gallery(
         response.set(http::field::content_type, "text/html");
         message = "404 Error Page";
     } else {
+
+        // split up the data string into a vector of different paths
+        std::vector<std::string> result;
+        std::stringstream s_stream(data);
+        while(s_stream.good()) {
+            std::string substr;
+            getline(s_stream, substr, ',');
+            result.push_back(substr);
+        }
+        for(int i = 0; i < result.size(); ++i) {
+            std::cout << result.at(i) << std::endl;
+        }
+
+        // create a vector to store all the html divs we create
+        std::vector<std::string> divs;
+
+        bool paths_fully_processed = true;
+
+        // for each path, generate a new div 
+        for (int i = 0; i < result.size(); ++i) {
+            std::string path = result[i];
+            std::string content;
+
+            if (!fs_->read(path, content)) {
+                paths_fully_processed = false;
+                break;
+            }
+            else {
+                caption_file cf = cfp_->read(content);
+
+                // generate a new div based on the content 
+                std::string div = "<div class=\"container\"><img src=\"" + cf.img_url + "\"alt=\"Image\" style=\"width:100%;\"><div class=\"top\">" + cf.top_caption + "</div><div class=\"bottom\">" + cf.bot_caption + "</div></div>";
+                divs.push_back(div);
+            }
+        }
+
+        // throw 404 if something unexpected happens
+        if (!paths_fully_processed || !fs_->read(HTML_TEMPLATE_PATH, html_template)) {
+            // throw 404 here, something went wrong
+            default_404 = true;
+            Logger::logError("404 file not found: " + path.string() + ". Serving error page instead.");
+            if (!fs_->read(PAGE_404_PATH, data)) {
+                data = "404 Not Found";
+            }
+            response.result(http::status::not_found);
+            response.set(http::field::content_type, "text/html");
+            message = "404 Error Page";
+        }
+
+        // replace the template part of the gallery with the divs in the divs vector
+        std::string html_payload = html_template.substr(0, html_template.find(placeholder));
+        for (int i = 0; i < divs.size(); ++i) {
+            html_payload = html_payload + divs[i];
+        }
+        html_payload = html_payload + html_template.substr(html_template.find(placeholder) + placeholder.size(), html_template.size());
+        data = html_payload;
+
         response.result(http::status::ok);
-        response.set(http::field::content_type, "application/json");
+        response.set(http::field::content_type, "text/html");
         Logger::logInfo("caption_this_request_handler - serve - success");
     }
 
