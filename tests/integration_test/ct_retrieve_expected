@@ -2,34 +2,53 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style type=text/css>
-        /* Container holding the image and the text */
-        .container {
-            position: relative;
-            text-align: center;
-            color: white;
+        /* Picture Frame */
+        img {
+            --b: 10px;
+            /* control the size */
+            padding: var(--b);
+            border: calc(2*var(--b)) solid #0000;
+            outline: 1px solid #000;
+            outline-offset: calc(-1*var(--b));
+            background: conic-gradient(from 90deg at 1px 1px, #0000 90deg, #000 0);
         }
 
-        .top {
-            position: absolute;
-            left: 50%;
-            top: 8px;
+        /* Background Animation */
+        body {
+            background: linear-gradient(-45deg, #f1f1f1, #F5F7FF, #dfe6ff, #6988f4);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            height: 100vh;
         }
 
-        .bottom {
-            position: absolute;
-            left: 50%;
-            bottom: 8px;
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <img src="https://test.com/xyz.jpg" alt="Image" style="width:100%;">
-        <div class="top">foo</div>
-        <div class="bottom">bar</div>
-    </div>
+    <main class="min-h-screen w-screen flex flex-col items-center">
+        <div class="absolute h-full md:w-3/5 w-full object-cover text-white text-xl tracking-wide font-bold">
+            <img src="https://test.com/xyz.jpg" alt="Image" class="absolute h-full w-full object-cover">
+            <div class="absolute left-1/2 transform -translate-x-1/2 top-10 items-center">foo</div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 bottom-10 items-center">bar</div>
+        </div>
+    </main>
 </body>
 
 </html>

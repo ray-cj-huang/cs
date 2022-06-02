@@ -8,7 +8,7 @@ WORKDIR /usr/src/project/build
 
 # Build and test
 RUN cmake ..
-RUN make -j 8
+RUN make -j 4
 RUN ctest --output-on_failure
 
 
