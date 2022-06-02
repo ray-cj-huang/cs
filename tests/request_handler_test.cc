@@ -366,7 +366,6 @@ TEST_F(RequestHandlerTest, captionThisGetSubmissionPage) {
     EXPECT_EQ(res.result(), http::status::ok);
 }
 
-// TODO(david)
 // TEST_F(RequestHandlerTest, captionThisGallery) {
 //     char buf_post_1[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello one";
 //     size_t size = std::strlen(buf_post_1);
