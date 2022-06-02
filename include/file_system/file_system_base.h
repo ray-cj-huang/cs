@@ -22,6 +22,7 @@ class FileSystem {
         virtual bool upload_file( const boost::filesystem::path& path, const std::string& body) = 0;
         virtual bool read( const boost::filesystem::path& path, std::string& data ) const = 0;
         virtual bool list_directory( const boost::filesystem::path& path, std::string& list_str ) const = 0;
+        virtual bool list_paths_directory( const boost::filesystem::path& path, std::string& list_str ) const = 0;
         
         // thread_unsafe:
         virtual boost::filesystem::path current_path() const = 0;

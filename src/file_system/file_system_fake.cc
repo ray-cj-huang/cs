@@ -252,6 +252,11 @@ bool FakeFileSystem::list_directory( const boost::filesystem::path& path, std::s
     return true;
 }
 
+bool FakeFileSystem::list_paths_directory( const boost::filesystem::path& path, std::string& list_str ) const {
+    // will implement during unit testing commit
+    return true;
+}
+
 FakeEntry* FakeFileSystem::get_entry( const fs::path& path ) const {
     FakeEntry* entry_wanted = nullptr;
     fs::path curr_path = path.lexically_normal();
