@@ -1,5 +1,6 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <string>
 
 #include "file_system_real.h"
 
@@ -128,12 +129,16 @@ bool RealFileSystem::list_paths_directory( const boost::filesystem::path& path, 
     if (!is_directory(path)) {
         return false;
     }
-    mutex_fs_.lock();  /**** atomic start ****/
-    for (fs::directory_iterator it(path); it!=fs::directory_iterator(); it++) {
-        list_str += it->path().string();
+    int path_len = path.string().size();
+    std::string glue = "";
+    if (path_len == 0 || path.string()[path_len - 1] != '/') {
+        glue = "/";
+    }
+    int next_id = get_next_id(path);
+    for (int i = 1; i < next_id; i++) {
+        list_str += path.string() + glue + std::to_string(i);
         list_str += ",";
     }
-    mutex_fs_.unlock();  /**** atomic end ****/
     if (list_str != "") {
         list_str = list_str.substr(0, list_str.size()-1);
     }
