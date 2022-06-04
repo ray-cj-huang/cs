@@ -1,4 +1,5 @@
 #include <boost/system/error_code.hpp>
+#include <algorithm>
 #include <string.h>
 #include <unordered_map>
 #include <boost/beast/http.hpp>
@@ -366,26 +367,50 @@ TEST_F(RequestHandlerTest, captionThisGetSubmissionPage) {
     EXPECT_EQ(res.result(), http::status::ok);
 }
 
-// TEST_F(RequestHandlerTest, captionThisGallery) {
-//     char buf_post_1[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello one";
-//     size_t size = std::strlen(buf_post_1);
-//     testCRUDHandler(buf_post_1, size);
-//     EXPECT_EQ(res.result(), http::status::ok);
+TEST_F(RequestHandlerTest, captionThisGalleryPage) {
+    char buf_post_1[] = "POST /caption/submit HTTP/1.1\r\nContent-Length: 17\r\n\r\ntop\nbottom\nimgurl";
+    size_t size = std::strlen(buf_post_1);
+    testCaptionThisHandler(buf_post_1, size);
+    EXPECT_EQ(res.result(), http::status::ok);
 
-//     char buf_post_2[] = "POST /crud/Shoe HTTP/1.1\r\nContent-Length: 9\r\n\r\nHello two";
-//     size = std::strlen(buf_post_2);
-//     testCRUDHandler(buf_post_2, size);
-//     EXPECT_EQ(res.result(), http::status::ok);
+    char buf_post_2[] = "POST /caption/submit HTTP/1.1\r\nContent-Length: 20\r\n\r\ntop_\nbottom_\nimgurl_";
+    size = std::strlen(buf_post_2);
+    testCaptionThisHandler(buf_post_2, size);
+    EXPECT_EQ(res.result(), http::status::ok);
 
-//     char buf_list[] = "GET /crud/Shoe HTTP/1.1\r\n\r\n";
-//     size = std::strlen(buf_list);
-//     testCRUDHandler(buf_list, size);
-//     EXPECT_EQ(res.result(), http::status::ok);
+    std::string specific_gallery_page_path = "../static/gallery_page.html";
+    std::string body = "PLACEHOLDER"; // replcae this with PLACEHOLDER
 
-//     std::string res_body;
-//     for (int i = 0; i < res.body().size; i++) {
-//         res_body += ((char*)res.body().data)[i];
-//     }
-//     std::string res_body_expected = "[1, 2]";
-//     EXPECT_EQ(res_body, res_body_expected);
-// }
+    fs->upload_file(specific_gallery_page_path, body);
+
+    char buf_gallery[] = "GET /caption HTTP/1.1\r\n\r\n";
+    size = std::strlen(buf_gallery);
+    testCaptionThisHandler(buf_gallery, size);
+    EXPECT_EQ(res.result(), http::status::ok);
+
+    std::string res_gallery_body;
+    for (int i = 0; i < res.body().size; i++) {
+        res_gallery_body += ((char*)res.body().data)[i];
+    }
+
+    std::string res_gallery_body_expected =
+        "<button class=\"relative text-white text-sm flex flex-wrap md:w-1/3 w-full hover:opacity-70\"> \
+            <a href=\"/caption/" + std::string("1") + "\" class=\"w-full h-full p-1 md:p-2\"> \
+                <img src=\"" + std::string("imgurl")  + "\"alt=\"Image\" class=\"block object-cover object-center w-full h-full rounded-lg\"> \
+                <div class=\"absolute left-1/2 transform -translate-x-1/2 top-3 items-center break-words max-w-[80%]\">" + std::string("top") + "</div> \
+                <div class=\"absolute left-1/2 transform -translate-x-1/2 bottom-3 items-center break-words max-w-[80%]\">" + std::string("bottom") + "</div> \
+            </a> \
+        </button><button class=\"relative text-white text-sm flex flex-wrap md:w-1/3 w-full hover:opacity-70\"> \
+            <a href=\"/caption/" + std::string("2") + "\" class=\"w-full h-full p-1 md:p-2\"> \
+                <img src=\"" + std::string("imgurl_")  + "\"alt=\"Image\" class=\"block object-cover object-center w-full h-full rounded-lg\"> \
+                <div class=\"absolute left-1/2 transform -translate-x-1/2 top-3 items-center break-words max-w-[80%]\">" + std::string("top_") + "</div> \
+                <div class=\"absolute left-1/2 transform -translate-x-1/2 bottom-3 items-center break-words max-w-[80%]\">" + std::string("bottom_") + "</div> \
+            </a> \
+        </button>";
+
+    res_gallery_body.erase(remove(res_gallery_body.begin(), res_gallery_body.end(), ' '), res_gallery_body.end());
+    res_gallery_body_expected.erase(remove(res_gallery_body_expected.begin(), res_gallery_body_expected.end(), ' '), res_gallery_body_expected.end());
+
+    EXPECT_EQ(res_gallery_body, res_gallery_body_expected);
+}
+

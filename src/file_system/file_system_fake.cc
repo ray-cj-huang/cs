@@ -253,7 +253,22 @@ bool FakeFileSystem::list_directory( const boost::filesystem::path& path, std::s
 }
 
 bool FakeFileSystem::list_paths_directory( const boost::filesystem::path& path, std::string& list_str ) const {
-    // will implement during unit testing commit
+    list_str = "";
+    if (!is_directory(path)) {
+        return false;
+    }
+    FakeDirectory* curr_dir = (FakeDirectory*)get_entry(path);
+    mutex_fs_.lock();  /**** atomic start ****/
+    for (auto entry : curr_dir->child_entries_) {
+        list_str += path.string() + "/" + entry->name_;
+        list_str += ",";
+    }
+    mutex_fs_.unlock();  /**** atomic end ****/
+    
+    //remove extra comma at the end
+    if (list_str != "") {
+        list_str = list_str.substr(0, list_str.size()-1);
+    }
     return true;
 }
 
